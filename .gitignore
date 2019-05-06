@@ -1,3 +1,6 @@
+# Operating system specific
+.DS_Store
+
 # JVM boilerplate
 *.class
 *.log
