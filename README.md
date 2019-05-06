@@ -51,5 +51,5 @@ cvbio.jar
 [scala-link]:              https://www.scala-lang.org/
 [scalafmt-badge]:          https://img.shields.io/badge/code_style-scalafmt-c22d40.svg
 [scalafmt-link]:           https://scalameta.org/scalafmt/
-[travis-badge]:            https://travis-ci.org/clintval/fgbio.svg?branch=master
-[travis-link]:             https://travis-ci.org/clintval/fgbio
+[travis-badge]:            https://travis-ci.org/clintval/cvbio.svg?branch=master
+[travis-link]:             https://travis-ci.org/clintval/cvbio
