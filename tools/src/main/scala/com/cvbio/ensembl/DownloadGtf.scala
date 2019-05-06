@@ -5,10 +5,10 @@ import java.io.{BufferedReader, InputStreamReader}
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 
-import com.fulcrumgenomics.commons.util.LazyLogging
-import com.fulcrumgenomics.sopt._
 import com.cvbio.cmdline.{ClpGroups, CvBioTool}
 import com.fulcrumgenomics.commons.io.Io
+import com.fulcrumgenomics.commons.util.LazyLogging
+import com.fulcrumgenomics.sopt._
 import org.apache.http.client.utils.URIBuilder
 import sun.net.www.protocol.ftp.FtpURLConnection
 
@@ -24,24 +24,24 @@ import scala.util.{Failure, Success, Try}
   @arg(flag = 'r', doc = "The Ensembl release.") val release: Int = 96,
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
   @arg(flag = 's', doc = "The species.") val species: String = "Homo sapiens",
-  @arg(flag = 'o', doc = "The output file (default STDOUT).") val out: Path = Io.StdOut
+  @arg(flag = 'o', doc = "The output file path.") val out: Path = Io.StdOut
 ) extends CvBioTool
   with LazyLogging {
 
-  private val ConnectionTimeout = 5000
-  private val GzipInputBuffer   = 4096
-  private val ReadTimeout       = 5000
+  private val ConnectionTimeout   = 5000
+  private val GzipInputBufferSize = 4096
+  private val ReadTimeout         = 5000
 
   override def execute(): Unit = {
     Io.assertCanWriteFile(out)
 
-    val speciesFmt  = species.replaceAll(" ", "_").toLowerCase
+    val speciesFmt  = species.replaceAll("\\s+", "_").toLowerCase
     val filename    = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
     val filepath    = s"/pub/release-$release/gtf/$speciesFmt/$filename"
 
     val url = new URIBuilder()
       .setScheme("ftp")
-      .setHost("ftp.ensembl.org")
+      .setHost(EnsemblDef.FtpHost)
       .setPath(filepath)
       .build
       .toURL
@@ -57,11 +57,12 @@ import scala.util.{Failure, Success, Try}
     Try(connection.getInputStream) match {
       case Success(inputStream) =>
         logger.info(s"Streaming URL: $url")
-        val gzipInputStream   = new GZIPInputStream(inputStream, GzipInputBuffer)
+        val gzipInputStream  = new GZIPInputStream(inputStream, GzipInputBufferSize)
         val inputStreamReader = new InputStreamReader(gzipInputStream)
         val bufferedReader    = new BufferedReader(inputStreamReader)
 
-        Iterator.continually(bufferedReader.readLine())
+        Iterator
+          .continually(bufferedReader.readLine())
           .takeWhile(_ != null)
           .foreach(line => writer.write(line + "\n"))
 
