@@ -25,8 +25,7 @@ import scala.util.{Failure, Success, Try}
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
   @arg(flag = 's', doc = "The species.") val species: String = "Homo sapiens",
   @arg(flag = 'o', doc = "The output file path.") val out: Path = Io.StdOut
-) extends CvBioTool
-  with LazyLogging {
+) extends CvBioTool {
 
   private val ConnectionTimeout   = 5000
   private val GzipInputBufferSize = 4096
@@ -46,8 +45,8 @@ import scala.util.{Failure, Success, Try}
       .build
       .toURL
 
-    val connection  = new FtpURLConnection(url)
-    val writer      = Io.toWriter(out)
+    val connection = new FtpURLConnection(url)
+    val writer     = Io.toWriter(out)
 
     connection.setConnectTimeout(ConnectionTimeout)
     connection.setReadTimeout(ReadTimeout)
@@ -57,14 +56,14 @@ import scala.util.{Failure, Success, Try}
     Try(connection.getInputStream) match {
       case Success(inputStream) =>
         logger.info(s"Streaming URL: $url")
-        val gzipInputStream  = new GZIPInputStream(inputStream, GzipInputBufferSize)
+        val gzipInputStream   = new GZIPInputStream(inputStream, GzipInputBufferSize)
         val inputStreamReader = new InputStreamReader(gzipInputStream)
         val bufferedReader    = new BufferedReader(inputStreamReader)
 
         Iterator
           .continually(bufferedReader.readLine())
           .takeWhile(_ != null)
-          .foreach(line => writer.write(line + "\n"))
+          .foreach(line => writer.write(s"$line\n"))
 
         bufferedReader.close()
       case Failure(e) =>
