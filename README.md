@@ -1,15 +1,16 @@
 # cvbio
 
 [![Build Status][travis-badge]][travis-link]
-[![Releases][releases-badge]][releases-link]
 [![Language][scala-badge]][scala-link]
 [![Code Style][scalafmt-badge]][scalafmt-link]
+[![Releases][releases-badge]][releases-link]
+[![License][license-badge]][license-link]
 
 Small bioinformatics Scala utilities.
 
 #### Development Workflow
 
-First install Mill and IntelliJ.
+First install [Mill][mill-link] and [IntelliJ][intellij-link].
 Generate IntelliJ configuration files with:
 
 ```bash
@@ -22,10 +23,11 @@ Assemble a portable JAR file with:
 ❯ mill _.deployLocal
 ```
 
-Mill will create a single JAR file at the following location:
+Mill will create two JAR files at the following location:
 
 ```bash
-❯ \ls -1 jars
+❯ \ls -1 jars 
+cvbio-pipelines.jar
 cvbio.jar
 ```
 
@@ -45,6 +47,8 @@ cvbio.jar
 1       havana  exon    13221   14409   .       +       .       gene_id "ENSG00000223972"; gene_version "5"; transcript_id "ENST00000456328"; transcript_version "2"; exon_number "3"; gene_name "DDX11L1"; gene_source "havana"; gene_biotype "transcribed_unprocessed_pseudogene"; transcript_name "DDX11L1-202"; transcript_source "havana"; transcript_biotype "processed_transcript"; exon_id "ENSE00002312635"; exon_version "1"; tag "basic"; transcript_support_level "1";
 ```
 
+[license-badge]:           http://img.shields.io/badge/license-MIT-blue.svg
+[license-link]:            https://github.com/clintval/cvbio/blob/master/LICENSE
 [releases-badge]:          https://img.shields.io/badge/cvbio_Releases-555555.svg
 [releases-link]:           https://github.com/clintval/cvbio/releases
 [scala-badge]:             https://img.shields.io/badge/language-scala-c22d40.svg
@@ -53,3 +57,6 @@ cvbio.jar
 [scalafmt-link]:           https://scalameta.org/scalafmt/
 [travis-badge]:            https://travis-ci.org/clintval/cvbio.svg?branch=master
 [travis-link]:             https://travis-ci.org/clintval/cvbio
+
+[intellij-link]: https://www.jetbrains.com/idea/download/#section=mac
+[mill-link]:     https://github.com/lihaoyi/mill
