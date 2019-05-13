@@ -11,7 +11,6 @@ import dagr.tasks.DagrDef.PathToBai
 import dagr.tasks.misc.{DeleteFiles, MakeDirectory, MoveFile}
 import dagr.tasks.picard.{AddOrReplaceReadGroups, MergeBamAlignment, SamToFastq, ValidateSamFile}
 
-
 @clp(
   description =
     """
