@@ -1,13 +1,12 @@
-package com.cvbio.ensembl
+package com.cvbio.tool.ensembl
 
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 
-import com.cvbio.cmdline.{ClpGroups, CvBioTool}
+import com.cvbio.tool.cmdline.{ClpGroups, CvBioTool}
 import com.fulcrumgenomics.commons.io.Io
-import com.fulcrumgenomics.commons.util.LazyLogging
 import com.fulcrumgenomics.sopt._
 import org.apache.http.client.utils.URIBuilder
 import sun.net.www.protocol.ftp.FtpURLConnection
@@ -19,7 +18,8 @@ import scala.util.{Failure, Success, Try}
     """
       |Download a GTF file from the Ensembl web server.
     """,
-  group = ClpGroups.Ensembl
+  group  = ClpGroups.Ensembl,
+  hidden = true
 ) class DownloadGtf(
   @arg(flag = 'r', doc = "The Ensembl release.") val release: Int = 96,
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
@@ -34,9 +34,9 @@ import scala.util.{Failure, Success, Try}
   override def execute(): Unit = {
     Io.assertCanWriteFile(out)
 
-    val speciesFmt  = species.replaceAll("\\s+", "_").toLowerCase
-    val filename    = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
-    val filepath    = s"/pub/release-$release/gtf/$speciesFmt/$filename"
+    val speciesFmt = species.replaceAll("\\s+", "_").toLowerCase
+    val filename   = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
+    val filepath   = s"/pub/release-$release/gtf/$speciesFmt/$filename"
 
     val url = new URIBuilder()
       .setScheme("ftp")

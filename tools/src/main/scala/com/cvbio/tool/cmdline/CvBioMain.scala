@@ -1,4 +1,4 @@
-package com.cvbio.cmdline
+package com.cvbio.tool.cmdline
 
 import com.fulcrumgenomics.cmdline.FgBioMain
 
