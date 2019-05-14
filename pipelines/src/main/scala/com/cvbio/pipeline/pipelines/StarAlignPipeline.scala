@@ -44,8 +44,7 @@ import dagr.tasks.picard.{AddOrReplaceReadGroups, MergeBamAlignment, SamToFastq,
   )
 
   override def build(): Unit = {
-    Io.assertReadable(input)
-    ref.foreach(Io.assertReadable)
+    Io.assertReadable(input ++ ref)
     Io.assertCanWriteFile(prefix)
 
     def bai(bam: PathToBam): PathToBai = PathUtil.replaceExtension(bam, ".bai")
@@ -77,13 +76,9 @@ import dagr.tasks.picard.{AddOrReplaceReadGroups, MergeBamAlignment, SamToFastq,
       case _ => unreachable("CLI validators should never let this happen!")
     }
 
-    val overwrite = new DeleteFiles(starBam) ==> new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
-    val cleanup   = new DeleteFiles(read1, read2)
-
-    val maybeValidate: Option[Task] = ref match {
-      case None       => None
-      case Some(_ref) => Some(new ValidateSamFile(in = starBam, prefix = None, ref = _ref))
-    }
+    val overwrite     = new DeleteFiles(starBam) ==> new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
+    val cleanup       = new DeleteFiles(read1, read2)
+    val maybeValidate = ref.map(_ref => new ValidateSamFile(in = starBam, prefix = None, ref = _ref))
 
     root ==> align ==> cleanup
     root ==> prepare ==> makeFastq ==> align ==> post ==> overwrite ==> maybeValidate
