@@ -18,8 +18,7 @@ import scala.util.{Failure, Success, Try}
     """
       |Download a GTF file from the Ensembl web server.
     """,
-  group  = ClpGroups.Ensembl,
-  hidden = true
+  group  = ClpGroups.Ensembl
 ) class DownloadGtf(
   @arg(flag = 'r', doc = "The Ensembl release.") val release: Int = 96,
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
