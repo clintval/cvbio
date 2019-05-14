@@ -11,7 +11,6 @@ import dagr.core.tasksystem.Pipeline
 import dagr.tasks.DagrDef.PathToBai
 import dagr.tasks.misc.{DeleteFiles, MakeDirectory, MoveFile}
 import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
-import htsjdk.samtools.SAMReadGroupRecord
 
 @clp(
   description =
@@ -41,21 +40,17 @@ import htsjdk.samtools.SAMReadGroupRecord
   @arg(doc = "The number of cores to use.") val cores: Cores = StarAlign.DefaultCores
 ) extends Pipeline(outputDirectory = Some(prefix.getParent)) {
 
-  if (ref.isEmpty) require(
-    Seq(sampleName, library, platform, platformUnit).forall(_.nonEmpty),
-    "If no reference FASTA is provided, all read group information must be supplied."
-  )
-
   override def build(): Unit = {
     Io.assertReadable(Seq(input) ++ ref)
     Io.assertCanWriteFile(prefix)
 
-    def bai(bam: PathToBam): PathToBai = PathUtil.replaceExtension(bam, ".bai")
+    def bai(bam: PathToBam): PathToBai                          = PathUtil.replaceExtension(bam, BaiExtension)
+    def f(prefix: PathPrefix, suffix: FilenameSuffix): FilePath = PathUtil.pathTo(prefix.toString + suffix)
 
-    val read1: PathToFastq = PathUtil.pathTo(prefix.toString + "raw.r1.fq")
-    val read2: PathToFastq = PathUtil.pathTo(prefix.toString + "raw.r2.fq")
-    val starBam: PathToBam = PathUtil.pathTo(prefix.toString + StarAlign.AlignedCoordinateSortedSuffix)
-    val tmpBam: PathToBam  = PathUtil.replaceExtension(starBam, ".tmp.bam")
+    val read1: PathToFastq = f(prefix, "r1.fq")
+    val read2: PathToFastq = f(prefix, "r2.fq")
+    val starBam: PathToBam = f(prefix, StarAlign.AlignedCoordinateSortedSuffix)
+    val tmpBam: PathToBam  = Io.makeTempFile(prefix = "tmp", suffix = BamExtension)
 
     val prepare   = new MakeDirectory(prefix.getParent)
     val makeFastq = new SamToFastq(in = input, fastq1 = read1, fastq2 = Some(read2), interleave = false)

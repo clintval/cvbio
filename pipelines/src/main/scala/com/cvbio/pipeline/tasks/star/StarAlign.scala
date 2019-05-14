@@ -5,7 +5,6 @@ import com.fulcrumgenomics.FgBioDef.FgBioEnum
 import dagr.core.execsystem.{Cores, Memory}
 import dagr.core.tasksystem.{FixedResources, ProcessTask}
 import enumeratum.EnumEntry
-import htsjdk.samtools.SAMReadGroupRecord
 
 import scala.collection.mutable.ListBuffer
 
