@@ -4,7 +4,7 @@ import mill._
 import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
 
-private val dagrCoreVersion     = "0.6.0-f784de2-SNAPSHOT"
+private val dagrCoreVersion     = "0.6.0-e114e03-SNAPSHOT"
 private val fgbioCommonsVersion = "0.8.0-c93e0f3-SNAPSHOT"
 private val fgbioVersion        = "0.8.1"
 
