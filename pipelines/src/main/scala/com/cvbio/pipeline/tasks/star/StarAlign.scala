@@ -36,7 +36,7 @@ class StarAlign(
     buffer.append("--genomeDir", genomeDir)
     prefix.foreach(buffer.append("--outFileNamePrefix", _))
     twoPass.foreach(buffer.append("--twoPassMode", _))
-    buffer.append("--outSAMattrRGline", readGroupLine)
+    buffer.append(Seq("--outSAMattrRGline") ++ readGroupLine: _*)
     buffer.append("--outSAMattributes", "All")
     buffer.append("--outSAMmode", "Full")
     buffer.append("--outSAMprimaryFlag", "OneBestScore")
@@ -54,16 +54,41 @@ class StarAlign(
     files.map(_.toString)
   }
 
-  /** Format the read group tags into a read group line. */
-  private[star] def readGroupLine: String = {
-    (
-      "ID:"
-        + id.getOrElse(StarAlign.DefaultReadGroupId)
-        + sampleName.map(" SM:" + _).getOrElse("")
-        + library.map( " LB:" + _).getOrElse("")
-        + platform.map(" PL:" + _).getOrElse("")
-        + platformUnit.map(" PU:" + _).getOrElse("")
-    )
+  /** Format the read group tags into a read group line.
+    *
+    * `STAR` requires that the first tag be the "ID" tag and that all additional tags follow, separated by whitespace.
+    * A developer caveat is that `STAR` will not parse single-quoted argument lists correctly and the resulting read
+    * group will be formatted in an invalid way within the SAM file. Instead, the argument groups must exist "naked" on
+    * the command line and only be encapsulated in double-quotes when there is whitespace within a single tag and value.
+    *
+    * For example, this will silently create a malformed BAM:
+    *
+    * {{{
+    *   "--outSAMattrRGline 'ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF'"
+    * }}}
+    *
+    * However, this will work appropriately:
+    *
+    * {{{
+    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF"
+    * }}}
+    *
+    * Similarly, this will work when there are spaces in the tag's value:
+    *
+    * {{{
+    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF "DS:My favorite sample!""
+    * }}}
+    * */
+  private[star] def readGroupLine: Seq[String] = {
+    def makeTag(tag: String, value:Option[String]): Option[String] = value.map(tag + ":" + _)
+    val requiredTags: Seq[String] = Seq("ID:" + id.getOrElse(StarAlign.DefaultReadGroupId))
+    val optionalTags: Seq[String] = Seq(
+      makeTag("SM", sampleName),
+      makeTag("LB", library),
+      makeTag("PL", platform),
+      makeTag("PU", platformUnit)
+    ).flatten
+    requiredTags ++ optionalTags
   }
 }
 

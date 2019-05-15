@@ -23,6 +23,9 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
       |
       | - <prefix>Aligned.sortedByCoord.out.bam
       |
+      |Note: At the moment, all read group information must be supplied, unless Picard's [[MergeBamAlignment]] is run.
+      |      A future feature of this pipeline will be to look that information up on-the-fly from the input BAM.
+      |
       |Note: All `STAR` outputs begin with the same file path prefix. For the sake of output file organization, it is
       |      recommended to terminate the file path prefix with a single period (".").
     """,
