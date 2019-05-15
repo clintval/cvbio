@@ -32,8 +32,8 @@ class StarAlign(
 ) extends ProcessTask
   with FixedResources {
 
-  if (id.nonEmpty) require(
-    Seq(sampleName, library, platform, platformUnit).forall(_.nonEmpty),
+  require(
+    !(id.isEmpty && Seq(sampleName, library, platform, platformUnit).exists(_.nonEmpty)),
     "If any of `sampleName`, `library`, `platform`, or `platformUnit` are defined, `id` must also be defined."
   )
   requires(cores, StarAlign.DefaultMemory)
