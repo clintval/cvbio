@@ -8,7 +8,15 @@ import enumeratum.EnumEntry
 
 import scala.collection.mutable.ListBuffer
 
-/** Align paired-end reads from FASTQ files with the `STAR` aligner. */
+/** Align paired-end reads from FASTQ files with the `STAR` aligner.
+  *
+  * The `STAR` aligner requires that if any of the following tags are defined, then the tag `id` must also be defined:
+  *
+  * - `sampleName`
+  * - `library`
+  * - `platform`
+  * - `platformUnit`
+  * */
 class StarAlign(
   read1: PathToFastq,
   read2: Option[PathToFastq],
@@ -24,6 +32,10 @@ class StarAlign(
 ) extends ProcessTask
   with FixedResources {
 
+  if (id.nonEmpty) require(
+    Seq(sampleName, library, platform, platformUnit).forall(_.nonEmpty),
+    "If any of `sampleName`, `library`, `platform`, or `platformUnit` are defined, `id` must also be defined."
+  )
   requires(cores, StarAlign.DefaultMemory)
 
   /** The command line arguments. */
@@ -36,7 +48,7 @@ class StarAlign(
     buffer.append("--genomeDir", genomeDir)
     prefix.foreach(buffer.append("--outFileNamePrefix", _))
     twoPass.foreach(buffer.append("--twoPassMode", _))
-    buffer.append(Seq("--outSAMattrRGline") ++ readGroupLine: _*)
+    id.foreach(_ => buffer.append(Seq("--outSAMattrRGline") ++ readGroupLine: _*))
     buffer.append("--outSAMattributes", "All")
     buffer.append("--outSAMmode", "Full")
     buffer.append("--outSAMprimaryFlag", "OneBestScore")
@@ -84,14 +96,13 @@ class StarAlign(
     /** Make the tag value string for the `STAR` command line. */
     def makeTag(tag: String, value:Option[String]): Option[String] = value.map(tag + ":" + _)
 
-    val requiredTags: Seq[String] = Seq("ID:" + id.getOrElse(StarAlign.DefaultReadGroupId))
-    val optionalTags: Seq[String] = Seq(
+    Seq(
+      makeTag("ID", id),
       makeTag("SM", sampleName),
       makeTag("LB", library),
       makeTag("PL", platform),
       makeTag("PU", platformUnit)
     ).flatten
-    requiredTags ++ optionalTags
   }
 }
 
@@ -106,9 +117,6 @@ object StarAlign {
 
   /** The default memory to use. */
   val DefaultMemory = Memory("24G")
-
-  /** The default read group ID to use, if one was not provided. */
-  val DefaultReadGroupId: String = "A"
 
   /** Trait that all enumeration values of type [[ChimeraOutputType]] should extend. */
   sealed trait ChimeraOutputType extends EnumEntry
