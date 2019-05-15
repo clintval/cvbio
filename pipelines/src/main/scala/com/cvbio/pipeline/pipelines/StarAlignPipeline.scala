@@ -46,6 +46,7 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
   override def build(): Unit = {
     Io.assertReadable(Seq(input) ++ ref)
     Io.assertCanWriteFile(prefix)
+    Io.assertListable(genomeDir)
 
     def bai(bam: PathToBam): PathToBai                          = PathUtil.replaceExtension(bam, BaiExtension)
     def f(prefix: PathPrefix, suffix: FilenameSuffix): FilePath = PathUtil.pathTo(prefix.toString + suffix)
