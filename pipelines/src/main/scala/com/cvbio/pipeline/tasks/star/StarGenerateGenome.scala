@@ -6,16 +6,6 @@ import dagr.core.tasksystem.{FixedResources, ProcessTask}
 
 import scala.collection.mutable.ListBuffer
 
-/** Defaults that are used when generating genomic reference data with `STAR` */
-object StarGenerateGenome {
-
-  /** The default cores to use. */
-  val DefaultCores = Cores(4)
-
-  /** The default memory to use. */
-  val DefaultMemory = Memory("8")
-}
-
 /** Prepare reference data for the `STAR` aligner. */
 class StarGenerateGenome(
   fasta: Seq[PathToFasta],
@@ -33,7 +23,7 @@ class StarGenerateGenome(
   override def args: Seq[Any] = {
     val buffer = ListBuffer[Any]()
     buffer.append(Star.findStar)
-    buffer.append("--runThreadN", resources.cores)
+    buffer.append("--runThreadN", resources.cores.toInt)
     buffer.append("--runMode", "genomeGenerate")
     buffer.append("--genomeFastaFiles", fasta.mkString(" "))
     buffer.append("--genomeDir", outputDir)
@@ -42,4 +32,14 @@ class StarGenerateGenome(
     prefix.foreach(buffer.append("--outFileNamePrefix", _))
     buffer
   }
+}
+
+/** Defaults that are used when generating genomic reference data with `STAR` */
+object StarGenerateGenome {
+
+  /** The default cores to use. */
+  val DefaultCores = Cores(4)
+
+  /** The default memory to use. */
+  val DefaultMemory = Memory("8")
 }

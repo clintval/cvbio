@@ -10,7 +10,7 @@ import dagr.core.execsystem.Cores
 import dagr.core.tasksystem.Pipeline
 import dagr.tasks.DagrDef.PathToBai
 import dagr.tasks.misc.{DeleteFiles, MakeDirectory, MoveFile}
-import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
+import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, ValidateSamFile}
 
 @clp(
   description =
@@ -23,12 +23,15 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
       |
       | - <prefix>Aligned.sortedByCoord.out.bam
       |
+      |Note: At the moment, all read group information must be supplied, unless Picard's [[MergeBamAlignment]] is run.
+      |      A future feature of this pipeline will be to look that information up on-the-fly from the input BAM.
+      |
       |Note: All `STAR` outputs begin with the same file path prefix. For the sake of output file organization, it is
       |      recommended to terminate the file path prefix with a single period (".").
     """,
   group = ClpGroups.Rna
 ) class StarAlignPipeline(
-  @arg(flag = 'i', doc = "Path to the input BAM.") val input: PathToBam,
+  @arg(flag = 'i', doc = "Path to the input unmapped BAM.") val input: PathToBam,
   @arg(flag = 'g', doc = "The STAR genome directory.") val genomeDir: DirPath,
   @arg(flag = 'd', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathPrefix,
   @arg(flag = 'r', doc = "The reference genome.") val ref: Option[PathToFasta] = None,
@@ -43,6 +46,7 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
   override def build(): Unit = {
     Io.assertReadable(Seq(input) ++ ref)
     Io.assertCanWriteFile(prefix)
+    Io.assertListable(genomeDir)
 
     def bai(bam: PathToBam): PathToBai                          = PathUtil.replaceExtension(bam, BaiExtension)
     def f(prefix: PathPrefix, suffix: FilenameSuffix): FilePath = PathUtil.pathTo(prefix.toString + suffix)
@@ -67,15 +71,17 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
       cores        = cores
     )
 
-    val maybeMergeAlignment = ref.map { _ref =>
-      val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
-      val deleteInput = new DeleteFiles(starBam)
-      val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
-      val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
-      merge ==> deleteInput ==> moveBam ==> validate
+    val postProcess = ref match {
+      case None       => new BuildBamIndex(starBam)
+      case Some(_ref) =>
+        val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
+        val deleteInput = new DeleteFiles(starBam)
+        val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
+        val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
+        merge ==> deleteInput ==> moveBam ==> validate
     }
 
     root ==> align ==> new DeleteFiles(read1, read2)
-    root ==> prepare ==> makeFastq ==> align ==> maybeMergeAlignment
+    root ==> prepare ==> makeFastq ==> align ==> postProcess
   }
 }
