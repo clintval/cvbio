@@ -10,7 +10,7 @@ import dagr.core.execsystem.Cores
 import dagr.core.tasksystem.Pipeline
 import dagr.tasks.DagrDef.PathToBai
 import dagr.tasks.misc.{DeleteFiles, MakeDirectory, MoveFile}
-import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
+import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, ValidateSamFile}
 
 @clp(
   description =
@@ -31,7 +31,7 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
     """,
   group = ClpGroups.Rna
 ) class StarAlignPipeline(
-  @arg(flag = 'i', doc = "Path to the input BAM.") val input: PathToBam,
+  @arg(flag = 'i', doc = "Path to the input unmapped BAM.") val input: PathToBam,
   @arg(flag = 'g', doc = "The STAR genome directory.") val genomeDir: DirPath,
   @arg(flag = 'd', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathPrefix,
   @arg(flag = 'r', doc = "The reference genome.") val ref: Option[PathToFasta] = None,
@@ -70,15 +70,17 @@ import dagr.tasks.picard.{MergeBamAlignment, SamToFastq, ValidateSamFile}
       cores        = cores
     )
 
-    val maybeMergeAlignment = ref.map { _ref =>
-      val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
-      val deleteInput = new DeleteFiles(starBam)
-      val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
-      val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
-      merge ==> deleteInput ==> moveBam ==> validate
+    val postProcess = ref match {
+      case Some(_ref) =>
+        val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
+        val deleteInput = new DeleteFiles(starBam)
+        val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
+        val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
+        merge ==> deleteInput ==> moveBam ==> validate
+      case None => new BuildBamIndex(starBam)
     }
 
     root ==> align ==> new DeleteFiles(read1, read2)
-    root ==> prepare ==> makeFastq ==> align ==> maybeMergeAlignment
+    root ==> prepare ==> makeFastq ==> align ==> postProcess
   }
 }

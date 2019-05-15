@@ -80,7 +80,10 @@ class StarAlign(
     * }}}
     * */
   private[star] def readGroupLine: Seq[String] = {
+
+    /** Make the tag value string for the `STAR` command line. */
     def makeTag(tag: String, value:Option[String]): Option[String] = value.map(tag + ":" + _)
+
     val requiredTags: Seq[String] = Seq("ID:" + id.getOrElse(StarAlign.DefaultReadGroupId))
     val optionalTags: Seq[String] = Seq(
       makeTag("SM", sampleName),
