@@ -23,7 +23,7 @@ class StarGenerateGenome(
   override def args: Seq[Any] = {
     val buffer = ListBuffer[Any]()
     buffer.append(Star.findStar)
-    buffer.append("--runThreadN", resources.cores)
+    buffer.append("--runThreadN", resources.cores.toInt)
     buffer.append("--runMode", "genomeGenerate")
     buffer.append("--genomeFastaFiles", fasta.mkString(" "))
     buffer.append("--genomeDir", outputDir)
