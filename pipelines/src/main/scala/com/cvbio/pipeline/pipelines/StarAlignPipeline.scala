@@ -72,13 +72,13 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     )
 
     val postProcess = ref match {
+      case None       => new BuildBamIndex(starBam)
       case Some(_ref) =>
         val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
         val deleteInput = new DeleteFiles(starBam)
         val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
         val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
         merge ==> deleteInput ==> moveBam ==> validate
-      case None => new BuildBamIndex(starBam)
     }
 
     root ==> align ==> new DeleteFiles(read1, read2)
