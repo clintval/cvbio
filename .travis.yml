@@ -7,7 +7,7 @@ jdk:
 script:
   - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6 && chmod +x ~/bin/mill
   - export PATH=~/bin/mill:$PATH
-  - travis_retry mill clean; mill --disable-ticker -s _.compile
+  - travis_retry mill clean; mill --disable-ticker -s _.compile; mill --disable-ticker -s _.test
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
 cache:
