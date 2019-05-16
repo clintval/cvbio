@@ -26,6 +26,11 @@ trait CommonModule extends SbtModule {
   }
 }
 
+trait ScalaTest extends TestModule {
+  override def ivyDeps = Agg(ivy"org.scalatest::scalatest::3.0.7".excludeOrg("org.junit"))
+  override def testFrameworks = Seq("org.scalatest.tools.Framework")
+}
+
 object commons extends CommonModule {
 
   override def ivyDeps = Agg(
@@ -39,6 +44,10 @@ object commons extends CommonModule {
     ExcludePattern(".*\\.git.*"),
     ExcludePattern(".*chromosome-mappings/README.md")
   )
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(commons)
+  }
 }
 
 object pipelines extends CommonModule {
@@ -50,6 +59,10 @@ object pipelines extends CommonModule {
   override def moduleDeps = Seq(commons)
 
   def deployLocal = T { super.deployLocal(assembly(), "cvbio-pipelines.jar")  }
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(pipelines, commons.test)
+  }
 }
 
 object tools extends CommonModule {
@@ -57,4 +70,8 @@ object tools extends CommonModule {
   override def moduleDeps = Seq(commons)
 
   def deployLocal = T { super.deployLocal(assembly(), "cvbio.jar")  }
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(tools, commons.test)
+  }
 }
