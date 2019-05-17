@@ -49,13 +49,12 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     Io.assertCanWriteFile(prefix)
     Io.assertListable(genomeDir)
 
-    def bai(bam: PathToBam): PathToBai                          = PathUtil.replaceExtension(bam, BaiExtension)
     def f(prefix: PathPrefix, suffix: FilenameSuffix): FilePath = PathUtil.pathTo(prefix.toString + suffix)
 
     val read1: PathToFastq = f(prefix, "r1.fq")
     val read2: PathToFastq = f(prefix, "r2.fq")
     val starBam: PathToBam = f(prefix, StarAlign.AlignedCoordinateSortedSuffix)
-    val tmpBam: PathToBam  = Io.makeTempFile(prefix = "tmp", suffix = BamExtension)
+    val tmpBam: PathToBam  = Io.makeTempFile(prefix = prefix.toString, suffix = BamExtension)
 
     val prepare   = new MakeDirectory(prefix.getParent)
     val makeFastq = new SamToFastq(in = input, fastq1 = read1, fastq2 = Some(read2), interleave = false)
@@ -76,6 +75,8 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     val postProcess = ref match {
       case None       => new BuildBamIndex(starBam)
       case Some(_ref) =>
+        def bai(bam: PathToBam): PathToBai = PathUtil.replaceExtension(bam, BaiExtension)
+
         val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
         val deleteInput = new DeleteFiles(starBam)
         val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
