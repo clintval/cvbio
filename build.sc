@@ -26,9 +26,15 @@ trait CommonModule extends SbtModule {
   }
 }
 
+trait ScalaTest extends TestModule {
+  override def ivyDeps = Agg(ivy"org.scalatest::scalatest::3.0.7".excludeOrg("org.junit"))
+  override def testFrameworks = Seq("org.scalatest.tools.Framework")
+}
+
 object commons extends CommonModule {
 
   override def ivyDeps = Agg(
+    ivy"org.slf4j:slf4j-nop:1.7.6",  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
     ivy"org.apache.httpcomponents:httpclient:4.5.8",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(excludeOrg: _*),
@@ -39,6 +45,10 @@ object commons extends CommonModule {
     ExcludePattern(".*\\.git.*"),
     ExcludePattern(".*chromosome-mappings/README.md")
   )
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(commons)
+  }
 }
 
 object pipelines extends CommonModule {
@@ -50,6 +60,10 @@ object pipelines extends CommonModule {
   override def moduleDeps = Seq(commons)
 
   def deployLocal = T { super.deployLocal(assembly(), "cvbio-pipelines.jar")  }
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(pipelines, commons.test)
+  }
 }
 
 object tools extends CommonModule {
@@ -57,4 +71,8 @@ object tools extends CommonModule {
   override def moduleDeps = Seq(commons)
 
   def deployLocal = T { super.deployLocal(assembly(), "cvbio.jar")  }
+
+  object test extends Tests with ScalaTest {
+    override def moduleDeps = Seq(tools, commons.test)
+  }
 }
