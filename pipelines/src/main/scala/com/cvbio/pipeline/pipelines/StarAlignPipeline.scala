@@ -49,12 +49,12 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     Io.assertCanWriteFile(prefix)
     Io.assertListable(genomeDir)
 
-    def f(prefix: PathPrefix, suffix: FilenameSuffix): FilePath = PathUtil.pathTo(prefix.toString + suffix)
+    def temp(suffix: FilenameSuffix): FilePath = Io.makeTempFile(prefix = getClass.getSimpleName, suffix = suffix)
 
-    val read1: PathToFastq = f(prefix, "r1.fq")
-    val read2: PathToFastq = f(prefix, "r2.fq")
-    val starBam: PathToBam = f(prefix, StarAlign.AlignedCoordinateSortedSuffix)
-    val tmpBam: PathToBam  = Io.makeTempFile(prefix = prefix.toString, suffix = BamExtension)
+    val starBam: PathToBam = PathUtil.pathTo(prefix.toString + StarAlign.AlignedCoordinateSortedSuffix)
+    val read1: PathToFastq = temp("r1.fq")
+    val read2: PathToFastq = temp("r2.fq")
+    val tempBam: PathToBam = temp(BamExtension)
 
     val prepare   = new MakeDirectory(prefix.getParent)
     val makeFastq = new SamToFastq(in = input, fastq1 = read1, fastq2 = Some(read2), interleave = false)
@@ -77,9 +77,9 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
       case Some(_ref) =>
         def bai(bam: PathToBam): PathToBai = PathUtil.replaceExtension(bam, BaiExtension)
 
-        val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tmpBam, ref = _ref)
+        val merge       = new MergeBamAlignment(unmapped = input, mapped = starBam, out = tempBam, ref = _ref)
         val deleteInput = new DeleteFiles(starBam)
-        val moveBam     = new MoveFile(tmpBam, starBam) ==> new MoveFile(bai(tmpBam), bai(starBam))
+        val moveBam     = new MoveFile(tempBam, starBam) ==> new MoveFile(bai(tempBam), bai(starBam))
         val validate    = new ValidateSamFile(in = starBam, prefix = None, ref = _ref)
         merge ==> deleteInput ==> moveBam ==> validate
     }

@@ -34,6 +34,7 @@ trait ScalaTest extends TestModule {
 object commons extends CommonModule {
 
   override def ivyDeps = Agg(
+    ivy"org.slf4j:slf4j-nop:1.7.6",  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
     ivy"org.apache.httpcomponents:httpclient:4.5.8",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(excludeOrg: _*),
