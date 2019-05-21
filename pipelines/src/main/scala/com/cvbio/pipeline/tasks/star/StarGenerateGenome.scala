@@ -41,5 +41,5 @@ object StarGenerateGenome {
   val DefaultCores = Cores(4)
 
   /** The default memory to use. */
-  val DefaultMemory = Memory("8")
+  val DefaultMemory = Memory("8G")
 }
