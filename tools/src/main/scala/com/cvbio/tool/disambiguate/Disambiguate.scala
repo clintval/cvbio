@@ -34,16 +34,18 @@ import com.fulcrumgenomics.sopt._
       |
       |  - Both input BAM files must be queryname sorted.
       |  - Only BAMs produced from the Burrows-Wheeler Aligner (bwa) are accepted at this time.
+      |
     """,
   group  = ClpGroups.AdHoc
 ) class Disambiguate(
   @arg(flag = '1', doc = "The first BAM.") val bam1: PathToBam,
   @arg(flag = '2', doc = "The second BAM.") val bam2: PathToBam,
-  // @arg(flag = 'a', doc = "The aligner that was used to map both BAM files.") val aligner: Aligner = Aligner.Bwa,
+  @arg(flag = 'a', doc = "The aligner that was used to map both BAM files.") val aligner: Aligner = Aligner.Bwa,
   @arg(flag = 'p', doc = "The output file prefix (e.g. dir/sample_name).") val prefix: PathPrefix
 ) extends CvBioTool {
 
-  // validate(aligner == Aligner.Bwa, "Only `bwa` is supported at this time.")
+  //validate(bam1 != bam2, "BAM files cannot be the same.")
+  validate(aligner == Aligner.Bwa, "Only `bwa` is supported at this time.")
 
   override def execute(): Unit = {
     Io.assertReadable(Seq(bam1, bam2))
