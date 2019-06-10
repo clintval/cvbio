@@ -37,7 +37,7 @@ import dagr.core.tasksystem.Pipeline
   @arg(flag = 'i', doc = "Input FASTA files.") val fasta: Seq[PathToFasta],
   @arg(flag = 'g', doc = "The transcripts in GTF format.") val gtf: PathToGtf,
   @arg(flag = 'o', doc = "The output directory.") val out: DirPath,
-  @arg(flag = 's', doc = "The splice junction overhang size.") val overhang: Int = 100,
+  @arg(doc = "The splice junction overhang size.") val overhang: Int = 100,
   @arg(doc = "The number of threads to use.") val threads: Cores = StarGenerateGenome.DefaultCores
 ) extends Pipeline {
 

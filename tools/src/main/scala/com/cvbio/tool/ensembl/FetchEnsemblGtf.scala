@@ -16,22 +16,23 @@ import scala.util.{Failure, Success, Try}
 @clp(
   description =
     """
-      |Download a GTF file from the Ensembl web server.
+      |Fetch a GTF file from the Ensembl web server.
     """,
   group  = ClpGroups.Ensembl
-) class DownloadGtf(
+) class FetchEnsemblGtf(
   @arg(flag = 'r', doc = "The Ensembl release.") val release: Int = 96,
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
   @arg(flag = 's', doc = "The species.") val species: String = "Homo sapiens",
   @arg(flag = 'o', doc = "The output file path.") val out: Path = Io.StdOut
 ) extends CvBioTool {
 
-  private val ConnectionTimeout   = 5000
-  private val GzipInputBufferSize = 4096
-  private val ReadTimeout         = 5000
+  private val ConnectionTimeout = 5000
+  private val GzipBufferSize    = 4096
+  private val ReadTimeout       = 5000
 
   override def execute(): Unit = {
     Io.assertCanWriteFile(out)
+    val writer = Io.toWriter(out)
 
     val speciesFmt = species.replaceAll("\\s+", "_").toLowerCase
     val filename   = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
@@ -45,7 +46,6 @@ import scala.util.{Failure, Success, Try}
       .toURL
 
     val connection = new FtpURLConnection(url)
-    val writer     = Io.toWriter(out)
 
     connection.setConnectTimeout(ConnectionTimeout)
     connection.setReadTimeout(ReadTimeout)
@@ -55,9 +55,9 @@ import scala.util.{Failure, Success, Try}
     Try(connection.getInputStream) match {
       case Success(inputStream) =>
         logger.info(s"Streaming URL: $url")
-        val gzipInputStream   = new GZIPInputStream(inputStream, GzipInputBufferSize)
-        val inputStreamReader = new InputStreamReader(gzipInputStream)
-        val bufferedReader    = new BufferedReader(inputStreamReader)
+        val gzipInputStream = new GZIPInputStream(inputStream, GzipBufferSize)
+        val streamReader    = new InputStreamReader(gzipInputStream)
+        val bufferedReader  = new BufferedReader(streamReader)
 
         Iterator
           .continually(bufferedReader.readLine())

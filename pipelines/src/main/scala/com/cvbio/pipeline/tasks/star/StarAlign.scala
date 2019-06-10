@@ -41,6 +41,7 @@ class StarAlign(
   /** The command line arguments. */
   override def args: Seq[Any] = {
     val buffer = ListBuffer[Any]()
+
     buffer.append(Star.findStar)
     buffer.append("--runThreadN", resources.cores.toInt)
     buffer.append("--runMode", "alignReads")
@@ -54,6 +55,7 @@ class StarAlign(
     buffer.append("--outSAMprimaryFlag", "OneBestScore")
     buffer.append("--outSAMtype", "BAM", "SortedByCoordinate")
     buffer.append("--outSAMunmapped", "Within", "KeepPairs")
+
     buffer
   }
 
