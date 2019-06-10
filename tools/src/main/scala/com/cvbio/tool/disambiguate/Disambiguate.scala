@@ -38,8 +38,8 @@ import com.fulcrumgenomics.sopt._
     """,
   group  = ClpGroups.AdHoc
 ) class Disambiguate(
-  @arg(flag = '1', doc = "The first BAM.") val bam1: PathToBam,
-  @arg(flag = '2', doc = "The second BAM.") val bam2: PathToBam,
+  @arg(flag = 'b', doc = "The BAM files to disambiguate.") val bam: Seq[PathToBam],
+  @arg(flag = 'r', doc = "The references the BAMs were aligned to, if not provided, will be inferred.") val reference: Seq[String] = Seq.empty,
   @arg(flag = 'a', doc = "The aligner that was used to map both BAM files.") val aligner: Aligner = Aligner.Bwa,
   @arg(flag = 'p', doc = "The output file prefix (e.g. dir/sample_name).") val prefix: PathPrefix
 ) extends CvBioTool {
