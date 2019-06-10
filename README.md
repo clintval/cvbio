@@ -6,35 +6,32 @@
 [![Releases][releases-badge]][releases-link]
 [![License][license-badge]][license-link]
 
-Small bioinformatics Scala utilities.
+Artisanal 🤣 bioinformatics Scala tools and pipelines.
 
-#### Development Workflow
+## Development Workflow
 
-First install [Mill][mill-link] and [IntelliJ][intellij-link].
-Generate IntelliJ configuration files with:
+First install [Mill][mill-link] and optionally create [IntelliJ][intellij-link] configuration files.
 
 ```bash
-❯ mill mill.scalalib.GenIdea/idea   
+❯ brew install mill
+❯ cd cvbio && mill mill.scalalib.GenIdea/idea
 ```
 
-Assemble a portable JAR file with:
+Assemble portable JAR files with:
 
 ```bash
 ❯ mill _.deployLocal
-```
-
-Mill will create two JAR files at the following location:
-
-```bash
-❯ \ls -1 jars 
+❯ ls -1 jars
 cvbio-pipelines.jar
 cvbio.jar
 ```
 
-#### Example Execution
+## Examples
+
+### Streaming an Ensembl GTF
 
 ```bash
-❯ java -jar jars/cvbio.jar DownloadGtf --species "Homo sapiens" --build 38 --release 96 2> /dev/null | head 
+❯ java -jar jars/cvbio.jar FetchEnsemblGtf --species "Homo sapiens" --build 38 --release 96 2> /dev/null | head 
 #!genome-build GRCh38.p12
 #!genome-version GRCh38
 #!genome-date 2013-12
@@ -45,6 +42,28 @@ cvbio.jar
 1       havana  exon    11869   12227   .       +       .       gene_id "ENSG00000223972"; gene_version "5"; transcript_id "ENST00000456328"; transcript_version "2"; exon_number "1"; gene_name "DDX11L1"; gene_source "havana"; gene_biotype "transcribed_unprocessed_pseudogene"; transcript_name "DDX11L1-202"; transcript_source "havana"; transcript_biotype "processed_transcript"; exon_id "ENSE00002234944"; exon_version "1"; tag "basic"; transcript_support_level "1";
 1       havana  exon    12613   12721   .       +       .       gene_id "ENSG00000223972"; gene_version "5"; transcript_id "ENST00000456328"; transcript_version "2"; exon_number "2"; gene_name "DDX11L1"; gene_source "havana"; gene_biotype "transcribed_unprocessed_pseudogene"; transcript_name "DDX11L1-202"; transcript_source "havana"; transcript_biotype "processed_transcript"; exon_id "ENSE00003582793"; exon_version "1"; tag "basic"; transcript_support_level "1";
 1       havana  exon    13221   14409   .       +       .       gene_id "ENSG00000223972"; gene_version "5"; transcript_id "ENST00000456328"; transcript_version "2"; exon_number "3"; gene_name "DDX11L1"; gene_source "havana"; gene_biotype "transcribed_unprocessed_pseudogene"; transcript_name "DDX11L1-202"; transcript_source "havana"; transcript_biotype "processed_transcript"; exon_id "ENSE00002312635"; exon_version "1"; tag "basic"; transcript_support_level "1";
+```
+
+### Preparing Reference Data for `STAR`
+
+```bash
+❯ java -jar jars/cvbio-pipelines.jar PrepareStarReferenceData \
+    -i references/hg38.fa \
+    -g transcripts.gtf \
+    -o STAR-references/hg38 \
+    --overhang 75 \
+    --threads $(nproc)
+```
+
+### Aligning a BAM File with `STAR`
+
+```bash
+❯ java -jar jars/cvbio-pipelines.jar StarAlignPipeline \
+    -i input.bam \
+    -g STAR-references/hg38 \
+    -p output/ \
+    -r references/hg38.fa \
+    --two-pass Basic
 ```
 
 [license-badge]:           http://img.shields.io/badge/license-MIT-blue.svg

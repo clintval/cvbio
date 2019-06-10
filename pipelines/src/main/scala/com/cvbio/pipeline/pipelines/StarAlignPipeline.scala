@@ -33,12 +33,12 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
 ) class StarAlignPipeline(
   @arg(flag = 'i', doc = "Path to the input unmapped BAM.") val input: PathToBam,
   @arg(flag = 'g', doc = "The STAR genome directory.") val genomeDir: DirPath,
-  @arg(flag = 'd', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathPrefix,
+  @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathPrefix,
   @arg(flag = 'r', doc = "The reference genome.") val ref: Option[PathToFasta] = None,
   @arg(flag = 'a', doc = "The read group ID", mutex = Array("ref")) val id: Option[String] = None,
   @arg(flag = 's', doc = "The sample name", mutex = Array("ref")) val sampleName: Option[String] = None,
   @arg(flag = 'l', doc = "The library ID", mutex = Array("ref")) val library: Option[String] = None,
-  @arg(flag = 'p', doc = "The platform (e.g. illumina).", mutex = Array("ref")) val platform: Option[String] = None,
+  @arg(flag = 'm', doc = "The platform (e.g. illumina).", mutex = Array("ref")) val platform: Option[String] = None,
   @arg(flag = 'u', doc = "The platform unit (e.g. run barcode)", mutex = Array("ref")) val platformUnit: Option[String] = None,
   @arg(flag = '2', doc = "The two-pass mode to use.") val twoPass: Option[TwoPassMode] = None,
   @arg(doc = "The number of cores to use.") val cores: Cores = StarAlign.DefaultCores
@@ -52,8 +52,8 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     def temp(suffix: FilenameSuffix): FilePath = Io.makeTempFile(prefix = getClass.getSimpleName, suffix = suffix)
 
     val starBam: PathToBam = PathUtil.pathTo(prefix.toString + StarAlign.AlignedCoordinateSortedSuffix)
-    val read1: PathToFastq = temp("r1.fq")
-    val read2: PathToFastq = temp("r2.fq")
+    val read1: PathToFastq = temp("r1" + FqExtension)
+    val read2: PathToFastq = temp("r2" + FqExtension)
     val tempBam: PathToBam = temp(BamExtension)
 
     val prepare   = new MakeDirectory(prefix.getParent)
