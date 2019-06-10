@@ -35,10 +35,8 @@ object commons extends CommonModule {
 
   override def ivyDeps = Agg(
     ivy"org.slf4j:slf4j-nop:1.7.6",  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
-    ivy"org.apache.httpcomponents:httpclient:4.5.8",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
-    ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(excludeOrg: _*),
-    ivy"org.reflections:reflections:0.9.11"
+    ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(excludeOrg: _*)
   )
 
   override def assemblyRules = Seq(
@@ -67,6 +65,10 @@ object pipelines extends CommonModule {
 }
 
 object tools extends CommonModule {
+  override def ivyDeps = Agg(
+    ivy"org.apache.httpcomponents:httpclient:4.5.8",
+    ivy"org.ddahl::rscala::3.2.11"
+  )
 
   override def moduleDeps = Seq(commons)
 
