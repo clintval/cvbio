@@ -1,4 +1,4 @@
-package com.cvbio.tools.testing
+package com.cvbio.testing
 
 import org.scalatest.{FlatSpec, Matchers}
 

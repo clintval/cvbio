@@ -1,6 +1,5 @@
 package com.cvbio.tools.ensembl
 
-
 import java.io.{BufferedReader, InputStreamReader}
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
