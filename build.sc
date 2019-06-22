@@ -1,16 +1,18 @@
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
+import mill.api.Loose
+import mill.define.Target
 import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
 
-private val dagrCoreVersion     = "0.6.0-e114e03-SNAPSHOT"
-private val fgbioCommonsVersion = "0.8.0-6d2f0a3-SNAPSHOT"
-private val fgbioVersion        = "0.8.1"
+private val dagrCoreVersion     = "0.6.0-46843f8-SNAPSHOT"
+private val fgbioCommonsVersion = "0.8.0-3087de3-SNAPSHOT"
+private val fgbioVersion        = "0.9.0-bf8c700-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
-trait CommonModule extends SbtModule {
+trait CommonModule extends ScalaModule {
   def scalaVersion = "2.12.2"
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
@@ -19,26 +21,24 @@ trait CommonModule extends SbtModule {
     MavenRepository("https://jcenter.bintray.com/")
   )
 
-  def deployLocal(assembly: PathRef, jarName: String): Unit = {
+  def localJar(assembly: PathRef, jarName: String): Unit = {
     mkdir(pwd / 'jars)
-
     cp.over(assembly.path, pwd / 'jars / jarName)
   }
 }
 
 trait ScalaTest extends TestModule {
-  override def ivyDeps = Agg(ivy"org.scalatest::scalatest::3.0.7".excludeOrg("org.junit"))
-  override def testFrameworks = Seq("org.scalatest.tools.Framework")
+  override def ivyDeps = Agg(ivy"org.scalatest::scalatest::3.0.7".excludeOrg(organizations="org.junit"))
+  override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
 }
 
 object commons extends CommonModule {
 
   override def ivyDeps = Agg(
-    ivy"org.slf4j:slf4j-nop:1.7.6",  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
-    ivy"org.apache.httpcomponents:httpclient:4.5.8",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
-    ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(excludeOrg: _*),
-    ivy"org.reflections:reflections:0.9.11"
+    ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
+    ivy"org.reflections:reflections:0.9.11",
+    ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
 
   override def assemblyRules = Seq(
@@ -46,33 +46,31 @@ object commons extends CommonModule {
     ExcludePattern(".*chromosome-mappings/README.md")
   )
 
-  object test extends Tests with ScalaTest {
-    override def moduleDeps = Seq(commons)
-  }
+  object test extends Tests with ScalaTest { override def moduleDeps = Seq(commons) }
 }
 
 object pipelines extends CommonModule {
-  override def ivyDeps = Agg(
+  override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"com.fulcrumgenomics::dagr-core::$dagrCoreVersion",
     ivy"com.fulcrumgenomics::dagr-tasks::$dagrCoreVersion"
   )
 
   override def moduleDeps = Seq(commons)
 
-  def deployLocal = T { super.deployLocal(assembly(), "cvbio-pipelines.jar")  }
+  def localJar = T { super.localJar(assembly(), jarName="cvbio-pipelines.jar") }
 
-  object test extends Tests with ScalaTest {
-    override def moduleDeps = Seq(pipelines, commons.test)
-  }
+  object test extends Tests with ScalaTest { override def moduleDeps = Seq(pipelines, commons.test) }
 }
 
 object tools extends CommonModule {
 
+  override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
+    ivy"org.apache.httpcomponents:httpclient:4.5.8"
+  )
+
   override def moduleDeps = Seq(commons)
 
-  def deployLocal = T { super.deployLocal(assembly(), "cvbio.jar")  }
+  def localJar = T { super.localJar(assembly(), jarName="cvbio.jar") }
 
-  object test extends Tests with ScalaTest {
-    override def moduleDeps = Seq(tools, commons.test)
-  }
+  object test extends Tests with ScalaTest { override def moduleDeps = Seq(tools, commons.test) }
 }
