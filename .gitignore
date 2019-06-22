@@ -1,3 +1,6 @@
+# Jenv specific https://www.jenv.be/
+.java-version
+
 # Operating system specific
 .DS_Store
 
