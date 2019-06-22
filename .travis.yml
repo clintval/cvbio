@@ -4,10 +4,13 @@ scala:
   - 2.12.2
 jdk:
   - openjdk8
+env:
+  - MILL_VERSION=0.4.1
 script:
-  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6 && chmod +x ~/bin/mill
+  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/"${MILL_VERSION}"/"${MILL_VERSION}" && chmod +x ~/bin/mill
   - export PATH=~/bin/mill:$PATH
   - travis_retry mill clean; mill --disable-ticker -s _.compile; mill --disable-ticker -s _.test
+  - mill --disable-ticker -s _.localJar
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
 cache:
