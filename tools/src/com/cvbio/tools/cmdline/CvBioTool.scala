@@ -1,4 +1,4 @@
-package com.cvbio.tool.cmdline
+package com.cvbio.tools.cmdline
 
 import com.fulcrumgenomics.cmdline.FgBioTool
 import com.fulcrumgenomics.commons.util.LazyLogging

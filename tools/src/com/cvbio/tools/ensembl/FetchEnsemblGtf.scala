@@ -1,11 +1,11 @@
-package com.cvbio.tool.ensembl
+package com.cvbio.tools.ensembl
 
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 
-import com.cvbio.tool.cmdline.{ClpGroups, CvBioTool}
+import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt._
 import org.apache.http.client.utils.URIBuilder
