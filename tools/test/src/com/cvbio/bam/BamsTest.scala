@@ -1,11 +1,37 @@
 package com.cvbio.bam
 
+import com.cvbio.bam.Bams.TemplateUtil
 import com.cvbio.testing.UnitSpec
+import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.{SamOrder, SamSource}
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.testing.SamBuilder
 
 class BamsTest extends UnitSpec {
+
+  "Bams.TemplateUtil" should "return every template's read1 or read2 in a single collection" in {
+    val builder = new SamBuilder(sort = Some(SamOrder.Queryname))
+    val pair1   = builder.addPair(name = "pair1")
+    val pair2   = builder.addPair(name = "pair2")
+    val pair3   = builder.addPair(name = "pair3")
+
+    val pair2Secondary     = builder.addPair(name = "pair2")
+    val pair2Supplementary = builder.addPair(name = "pair2")
+
+    pair2Secondary.foreach(_.secondary = true)
+    pair2Supplementary.foreach(_.supplementary = true)
+
+    val templates = Seq(
+      Template(pair1.toIterator),
+      Template((pair2 ++ pair2Secondary ++ pair2Supplementary).toIterator),
+      Template(pair3.toIterator)
+    )
+
+    val expected = Seq(pair1, pair2, pair2Secondary, pair2Supplementary, pair3)
+
+    templates.flatMap(_.allR1) should contain theSameElementsInOrderAs expected.flatMap(_.take(1))
+    templates.flatMap(_.allR2) should contain theSameElementsInOrderAs expected.flatMap(_.takeRight(1))
+  }
 
   "Bams.querynameSorted" should "only return true if the header is set to a queryname sort" in {
     SamOrder.values.foreach { so =>

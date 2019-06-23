@@ -6,9 +6,10 @@ import mill.define.Target
 import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
 
+private val cvbioVersion        = "0.0.5"
 private val dagrCoreVersion     = "0.6.0-46843f8-SNAPSHOT"
 private val fgbioCommonsVersion = "0.8.0-3087de3-SNAPSHOT"
-private val fgbioVersion        = "0.9.0-4370dfe-SNAPSHOT"
+private val fgbioVersion        = "0.9.0-f2cfac4-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
@@ -34,12 +35,18 @@ trait ScalaTest extends TestModule {
 
 object commons extends CommonModule {
 
+  def gitHash: String = %%("git", "rev-parse", "--short", "HEAD")(pwd).out.string.trim
+
+  override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation")
+
   override def ivyDeps = Agg(
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
     ivy"org.reflections:reflections:0.9.11",
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
+
+  // def manifest = T { super.manifest().add(ImplementationVersion.toString -> s"cvbioVersion-$gitHash-SNAPSHOT") }
 
   override def assemblyRules = Seq(
     ExcludePattern(".*\\.git.*"),
