@@ -1,4 +1,4 @@
-package com.cvbio.tool.ensembl
+package com.cvbio.tools.ensembl
 
 /** Constants across all Ensembl-related tools. */
 object EnsemblDef {
