@@ -78,19 +78,19 @@ class StarAlign(
     * For example, this will silently create a malformed BAM:
     *
     * {{{
-    *   "--outSAMattrRGline 'ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF'"
+    *   "--outSAMattrRGline 'ID:1 SM:sampleName LB:1 PL:ILLUMINA PU:HA3J2JDF'"
     * }}}
     *
     * However, this will work appropriately:
     *
     * {{{
-    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF"
+    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:ILLUMINA PU:HA3J2JDF"
     * }}}
     *
     * Similarly, this will work when there are spaces in the tag's value:
     *
     * {{{
-    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:illumina PU:HA3J2JDF "DS:My favorite sample!""
+    *   "--outSAMattrRGline ID:1 SM:sampleName LB:1 PL:ILLUMINA PU:HA3J2JDF "DS:My favorite sample!""
     * }}}
     * */
   private[star] def readGroupLine: Seq[String] = {
