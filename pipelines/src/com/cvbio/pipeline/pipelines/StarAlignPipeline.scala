@@ -76,6 +76,6 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
         merge ==> deleteInput ==> moveBam ==> validate
     }
 
-    root ==> prepare ==> makeFastq ==> align ==> (postProcess ::  new DeleteFiles(read1, read2))
+    root ==> prepare ==> makeFastq ==> align ==> (postProcess :: new DeleteFiles(read1, read2))
   }
 }
