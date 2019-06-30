@@ -8,7 +8,7 @@ import mill.scalalib._
 
 private val dagrCoreVersion     = "0.6.0-46843f8-SNAPSHOT"
 private val fgbioCommonsVersion = "0.8.0-3087de3-SNAPSHOT"
-private val fgbioVersion        = "0.9.0-bf8c700-SNAPSHOT"
+private val fgbioVersion        = "0.9.0-4370dfe-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 

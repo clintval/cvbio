@@ -52,7 +52,7 @@ cvbio.jar
     -g transcripts.gtf \
     -o STAR-references/hg38 \
     --overhang 75 \
-    --threads $(nproc)
+    --threads 8
 ```
 
 ### Aligning a BAM File with `STAR`
@@ -61,7 +61,7 @@ cvbio.jar
 ❯ java -jar jars/cvbio-pipelines.jar StarAlignPipeline \
     -i input.bam \
     -g STAR-references/hg38 \
-    -p output/ \
+    -p output/sample.library \
     -r references/hg38.fa \
     --two-pass Basic
 ```
