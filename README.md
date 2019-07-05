@@ -47,4 +47,4 @@ cvbio.jar
 
 ## Documentation
 
-[Disambiguation Benchmarks](https://github.com/clintval/cvbio/tree/master/docs/benchmarks/)
+[Disambiguation Benchmarks](https://github.com/clintval/cvbio/blob/master/docs/benchmarks/disambiguate.md)
