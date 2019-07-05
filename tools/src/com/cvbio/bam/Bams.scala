@@ -1,15 +1,32 @@
 package com.cvbio.bam
 
+import com.cvbio.commons.CommonsDef._
 import com.fulcrumgenomics.bam.Bams.templateIterator
 import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.SamOrder.Queryname
-import com.fulcrumgenomics.bam.api.SamSource
-import com.fulcrumgenomics.commons.CommonsDef._
+import com.fulcrumgenomics.bam.api.{SamRecord, SamSource}
 import com.fulcrumgenomics.commons.collection.SelfClosingIterator
 import com.fulcrumgenomics.commons.util.LazyLogging
+import htsjdk.samtools.{SAMTag => SamTag}
 
 /** Common methods for working with SAM/BAM files. */
 object Bams extends LazyLogging {
+
+  /** Implicit class that makes working with the alignment metrics in a [[Template]] easier. */
+  implicit class TemplateUtil(private val template: Template) {
+
+    /** Create a collection of all [[SamRecord]]s that are read1. */
+    def allR1: Iterator[SamRecord] = template.r1.iterator ++ template.r1Secondaries.iterator ++ template.r1Supplementals.iterator
+
+    /** Create a collection of all [[SamRecord]]s that are read2. */
+    def allR2: Iterator[SamRecord] = template.r2.iterator ++ template.r2Secondaries.iterator ++ template.r2Supplementals.iterator
+
+    /** Return the SAM tag values for a specific SAM tag across all read1. */
+    def allR1[T](tag: SamTag): Iterator[Option[T]] = allR1.map(_.get[T](tag.toString))
+
+    /** Return the SAM tag values for a specific SAM tag across all read1. */
+    def allR2[T](tag: SamTag): Iterator[Option[T]] = allR2.map(_.get[T](tag.toString))
+  }
 
   /** Collectively iterate through [[SamSource]] iterators and emit templates of the same name, albeit with potentially
     * different alignments.

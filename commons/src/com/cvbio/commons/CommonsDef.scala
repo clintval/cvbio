@@ -7,6 +7,7 @@ import htsjdk.samtools.BamFileIoUtils.{BAM_FILE_EXTENSION => bamFileExtension}
 import htsjdk.samtools.cram.CRAIIndex.{CRAI_INDEX_SUFFIX => craiFileExtension}
 import htsjdk.samtools.cram.build.CramIO.{CRAM_FILE_EXTENSION => cramFileExtension}
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
+import htsjdk.samtools.util.IOUtil.{SAM_FILE_EXTENSION => samFileExtension}
 
 object CommonsDef extends FgBioCommonsDef {
 
@@ -21,6 +22,9 @@ object CommonsDef extends FgBioCommonsDef {
 
   /** The extension of CRAM files. */
   val CramExtension: FilenameSuffix = cramFileExtension
+
+  /** The extension of SAM files. */
+  val SamExtension: FilenameSuffix = samFileExtension
 
   /** The long version of the FASTQ file extension. */
   val FastqExtension: FilenameSuffix = fastq.getExtension
@@ -43,8 +47,14 @@ object CommonsDef extends FgBioCommonsDef {
   /** Represents a path to a BAM/CRAM index file. */
   type PathToBai = java.nio.file.Path
 
+  /** Represents a path to a BigWig file. */
+  type PathToBigWig = java.nio.file.Path
+
   /** Represents a path to a GTF file. */
   type PathToGtf = java.nio.file.Path
+
+  /** Represents a path to an Illumina Sample Sheet. */
+  type PathToSampleSheet = java.nio.file.Path
 
   /** A String that represents a filename. */
   type Filename = String
