@@ -65,7 +65,7 @@ import htsjdk.samtools.SAMTag.{AS, NM}
 
     val writers = sources
       .zip(assemblyNames)
-      .map { case (source, name) => SamWriter(path = prefix + s".$name.$SamExtension", header = source.header) }
+      .map { case (source, name) => SamWriter(path = prefix + s".$name$BamExtension", header = source.header) }
 
     templatesIterator(sources: _*)
       .foreach { templates =>
