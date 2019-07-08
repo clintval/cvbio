@@ -107,6 +107,34 @@ object Disambiguate {
       .flatMap { record => Option(record.getAssembly) }
   }
 
+  /** Implicits for counting the number of maximum items in a collection. */
+  private[disambiguate] implicit class WithMaxCount[T](self: Iterable[T]) {
+
+    /** Return the number of maximally occurring items in a collection of items. */
+    def maxCount(fn: T => Int): Int = self.count(p => self.map(fn).reduceOption(_ max _).contains(fn(p)))
+  }
+
+  /** A container to hold the best alignment scores per [[Template]]. */
+  private[disambiguate] case class BestAlignmentScores(r1AS: Int, r2AS: Int, r1NM: Int, r2NM: Int) {
+    def maxAS: Int = r1AS max r2AS
+    def minAS: Int = r1AS min r2AS
+    def maxNM: Int = r1NM max r2NM
+    def minNM: Int = r1NM min r2NM
+  }
+
+  /** Companion object to [[BestAlignmentScores]]. */
+  private[disambiguate] object BestAlignmentScores {
+
+    /** Build a [[BestAlignmentScores]] from a [[Template]]. */
+    def apply(template: Template): BestAlignmentScores = {
+      new BestAlignmentScores(
+        r1AS = template.allR1[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
+        r2AS = template.allR2[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
+        r1NM = template.allR1[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue),
+        r2NM = template.allR2[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue)
+      )
+    }
+  }
   /** Trait that all enumeration values of type [[DisambiguationStrategy]] should extend. */
   sealed trait DisambiguationStrategy extends EnumEntry {
 
@@ -142,35 +170,6 @@ object Disambiguate {
         * While making choices, ensure we always compare read1 against read1 in all templates, and read2 against read2.
         * */
       def choose(templates: Seq[Template]): Option[Template] = {
-
-        /** Implicits for counting the number of maximum items in a collection. */
-        implicit class WithMaxCount[T](self: Iterable[T]) {
-
-          /** Return the number of maximally occurring items in a collection of items. */
-          def maxCount(fn: T => Int): Int = self.count(p => self.map(fn).reduceOption(_ max _).contains(fn(p)))
-        }
-
-        /** A container to hold the best alignment scores per [[Template]]. */
-        case class BestAlignmentScores(r1AS: Int, r2AS: Int, r1NM: Int, r2NM: Int) {
-          def maxAS: Int = r1AS max r2AS
-          def minAS: Int = r1AS min r2AS
-          def maxNM: Int = r1NM max r2NM
-          def minNM: Int = r1NM min r2NM
-        }
-
-        /** Companion object to [[BestAlignmentScores]]. */
-        object BestAlignmentScores {
-
-          /** Build a [[BestAlignmentScores]] from a [[Template]]. */
-          def apply(template: Template): BestAlignmentScores = {
-            new BestAlignmentScores(
-              r1AS = template.allR1[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
-              r2AS = template.allR2[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
-              r1NM = template.allR1[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue),
-              r2NM = template.allR2[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue)
-            )
-          }
-        }
 
         val bestScores = templates.map(BestAlignmentScores.apply)
 
