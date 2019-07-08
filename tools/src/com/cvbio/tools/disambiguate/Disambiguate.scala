@@ -59,13 +59,11 @@ import htsjdk.samtools.SAMTag.{AS, NM}
       .zip(assemblyNames)
       .map { case (source, name) => SamWriter(path = PathUtil.pathTo(prefix + s".$name$BamExtension"), header = source.header) }
 
-
     templatesIterator(sources: _*)
       .foreach { templates =>
-        val index: Option[Int] = strategy.indexOfBest(templates)
-        index match {
-          case Some(i) => writers(i).write(templates(i).allReads)
-          case None    => // TODO: Write out the ambiguous alignments.
+        strategy.indexOfBest(templates) match {
+          case Some(index) => writers(index).write(templates(index).allReads)
+          case None        => // TODO: Write out the ambiguous alignments.
         }
       }
 
