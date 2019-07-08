@@ -2,14 +2,13 @@ package com.cvbio.tools.disambiguate
 
 import com.cvbio.bam.Bams.{TemplateUtil, templatesIterator}
 import com.cvbio.commons.CommonsDef._
-import com.cvbio.commons.io.Io.PathUtil
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import com.cvbio.tools.disambiguate.Disambiguate.DisambiguationStrategy.ClassicDisambiguationStrategy
 import com.cvbio.tools.disambiguate.Disambiguate.{DisambiguationStrategy, firstAssemblyName}
 import com.fulcrumgenomics.FgBioDef.FgBioEnum
 import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.{SamSource, SamWriter}
-import com.fulcrumgenomics.commons.io.Io
+import com.fulcrumgenomics.commons.io.{Io, PathUtil}
 import com.fulcrumgenomics.sopt._
 import enumeratum.EnumEntry
 import htsjdk.samtools.SAMTag.{AS, NM}
@@ -31,22 +30,14 @@ import htsjdk.samtools.SAMTag.{AS, NM}
       |### Caveats
       |
       |  - No ambiguous BAM is currently written to the output prefix.
-      |  - All input BAMs must have an Assembly Name defined in the first sequence of the sequence dictionary.
       |  - All input BAM files must be queryname grouped and synchronized on the read name.
-      |  - Only BAMs produced from the Burrows-Wheeler Aligner (bwa) and STAR are currently supported.
-      |  - Only BAMs produced from the same aligner are currently supported.
+      |  - Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
       |
       |### Glossary
       |
       |  - MAPQ: A metric that tells you how confident you can be that a read comes from a reported mapping position.
       |  - AS:   A metric that tells you how similar the read is to the reference sequence.
-      |  - NM:   A metric that measures the number of mismatches to th reference sequence (Hamming distance).
-      |
-      |### Features for a Future Release
-      |
-      |  - Override the assembly names (output BAM prefixes)
-      |  - Support `tophat` or `hisat2` alignments.
-      |  - Check whether mixed aligners have been used and raise exception.
+      |  - NM:   A metric that measures the number of mismatches to the reference sequence (Hamming distance).
       |
       |### Prior Art
       |
@@ -56,7 +47,8 @@ import htsjdk.samtools.SAMTag.{AS, NM}
 ) class Disambiguate(
   @arg(flag = 'i', doc = "The queryname-sorted BAMs to disambiguate.") val input: Seq[PathToBam],
   @arg(flag = 'p', doc = "The output file prefix (e.g. dir/sample_name).") val prefix: PathPrefix,
-  @arg(flag = 's', doc = "The disambiguation strategy to use.") val strategy: DisambiguationStrategy = ClassicDisambiguationStrategy
+  @arg(flag = 's', doc = "The disambiguation strategy to use.") val strategy: DisambiguationStrategy = ClassicDisambiguationStrategy,
+  @arg(flag = 'n', doc = "The reference names. Default to the first Assembly Name in the BAM header.", minElements = 0) val referenceName: Seq[String] = Seq.empty
 ) extends CvBioTool {
 
   override def execute(): Unit = {
@@ -65,23 +57,33 @@ import htsjdk.samtools.SAMTag.{AS, NM}
 
     val writers = sources
       .zip(assemblyNames)
-      .map { case (source, name) => SamWriter(path = prefix + s".$name$BamExtension", header = source.header) }
+      .map { case (source, name) => SamWriter(path = PathUtil.pathTo(prefix + s".$name$BamExtension"), header = source.header) }
+
 
     templatesIterator(sources: _*)
       .foreach { templates =>
         val index: Option[Int] = strategy.indexOfBest(templates)
-        index.foreach(i => writers(i).write(templates(i).allReads))
+        index match {
+          case Some(i) => writers(i).write(templates(i).allReads)
+          case None    => // TODO: Write out the ambiguous alignments.
+        }
       }
 
     writers.foreach(_.close())
   }
 
-  /** Fetch the first assembly names from the input BAMs. */
+  /** Fetch the first assembly names from the input BAMs unless provided on the CLI. */
   private def assemblyNames: Seq[String] = {
-    val names = sources.flatMap(source => firstAssemblyName(source))
-    require(names.lengthCompare(sources.length) == 0, s"Not all BAM have their first assembly name defined. Only found: ${names.mkString(", ")}")
-    require(names.distinct.lengthCompare(names.length) == 0, s"BAMs with the same assembly name are not allowed: ${names.mkString(", ")}")
-    names
+    if (referenceName.nonEmpty) {
+      require(input.lengthCompare(referenceName.length) == 0, s"There must be a reference name for every input BAM, or None. Found: ${referenceName.mkString(", ")}")
+      require(referenceName.distinct.length == referenceName.length, s"No redundant reference names are allowed. Found: ${referenceName.mkString(", ")}")
+      referenceName.map { name => PathUtil.sanitizeFileName(fileName = name) }
+    } else {
+      val names = sources.flatMap(source => firstAssemblyName(source))
+      require(names.lengthCompare(sources.length) == 0, s"Not all BAM have their first assembly name defined. Found: ${names.mkString(", ")}")
+      require(names.distinct.lengthCompare(names.length) == 0, s"BAMs with the same assembly name are not allowed. Found: ${names.mkString(", ")}")
+      names
+    }
   }
 
   /** Check that each BAM is readable and return its [[SamSource]]. */
@@ -129,22 +131,22 @@ object Disambiguate {
     /** The value when [[DisambiguationStrategy]] is the original published algorithm. */
     case object ClassicDisambiguationStrategy extends DisambiguationStrategy {
 
-        /** Pick the template by using the following logic:
-          *
-          * 1. Choose the template with the highest max alignment score, if there are multiple, move on.
-          * 2. Choose the template with the highest min alignment score, if there are multiple, move on.
-          * 3. Choose the template with the lowest min alignment edit distance, if there are multiple, move on.
-          * 4. Choose the template with the lowest max alignment edit distance, if there are multiple, move on.
-          * 5. Return None because this template is ambiguous across all alignments.
-          *
-          * While making choices, ensure we always compare read1 against read1 in all templates, and read2 against read2.
-          * */
+      /** Pick the template by using the following logic:
+        *
+        * 1. Choose the template with the highest max alignment score, if there are multiple, move on.
+        * 2. Choose the template with the highest min alignment score, if there are multiple, move on.
+        * 3. Choose the template with the lowest min alignment edit distance, if there are multiple, move on.
+        * 4. Choose the template with the lowest max alignment edit distance, if there are multiple, move on.
+        * 5. Return None because this template is ambiguous across all alignments.
+        *
+        * While making choices, ensure we always compare read1 against read1 in all templates, and read2 against read2.
+        * */
       def choose(templates: Seq[Template]): Option[Template] = {
 
-        /** Implicits for counting the number of maximum properties in a container of items. */
-        implicit class WithMinMaxCount[T](self: Iterable[T]) {
+        /** Implicits for counting the number of maximum items in a collection. */
+        implicit class WithMaxCount[T](self: Iterable[T]) {
 
-          /** Return the number of maximally occuring items in a container of items. */
+          /** Return the number of maximally occurring items in a collection of items. */
           def maxCount(fn: T => Int): Int = self.count(p => self.map(fn).reduceOption(_ max _).contains(fn(p)))
         }
 
