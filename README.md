@@ -1,11 +1,14 @@
 # cvbio
 
 [![Build Status][travis-badge]][travis-link]
+[![Code Coverage][codecov-badge]][codecov-link]
 [![Language][scala-badge]][scala-link]
 [![Code Style][scalafmt-badge]][scalafmt-link]
 [![Releases][releases-badge]][releases-link]
 [![License][license-badge]][license-link]
 
+[codecov-badge]:  https://codecov.io/gh/clintval/cvbio/branch/master/graph/badge.svg
+[codecov-link]:   https://codecov.io/gh/clintval/cvbio
 [license-badge]:  https://img.shields.io/badge/license-MIT-blue.svg
 [license-link]:   https://github.com/clintval/cvbio/blob/master/LICENSE
 [releases-badge]: https://img.shields.io/badge/cvbio_Releases-555555.svg

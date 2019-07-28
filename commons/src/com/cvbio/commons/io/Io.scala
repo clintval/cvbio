@@ -1,6 +1,10 @@
 package com.cvbio.commons.io
 
+import java.io.{BufferedWriter, OutputStreamWriter}
+import java.nio.file.Path
+
 import com.cvbio.commons.CommonsDef._
+import com.cvbio.commons.collection.BufferedLineWriter
 import com.fulcrumgenomics.commons.io.IoUtil
 
 import scala.util.Try
@@ -13,6 +17,9 @@ class Io extends IoUtil {
 
   /** Test if a filepath is writable. */
   def writable(path: FilePath): Boolean = Try(assertCanWriteFile(path)).isSuccess
+
+  /** Creates a new BufferedWriter LineWriter to write to the supplied path. */
+  def toLineWriter(path: Path): BufferedLineWriter = new BufferedWriter(new OutputStreamWriter(toOutputStream(path)), bufferSize) with BufferedLineWriter
 }
 
 /** Singleton extending our IO utilities. */

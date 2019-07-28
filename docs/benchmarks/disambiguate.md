@@ -70,12 +70,8 @@ Although verbose, we follow the [GATK best practice][gatk-reference] alignment g
      | picard MergeBamAlignment \
          ALIGNED=/dev/stdin \
          UNMAPPED=insilico/all.unmapped.bam \
-         OUTPUT=/dev/stdout \
-         REFERENCE_SEQUENCE=/pipeline/reference-data/references/{}/{}.fa \
-     | picard SortSam \
-         INPUT=/dev/stdin \
          OUTPUT=insilico/all.{}.mapped.bam \
-         SORT_ORDER=queryname' \
+         REFERENCE_SEQUENCE=/pipeline/reference-data/references/{}/{}.fa
   ::: hs38DH mm10 rn6
 ```
 
