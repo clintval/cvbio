@@ -1,66 +1,175 @@
 package com.cvbio.bam
 
+import com.cvbio.bam.Bams.ReadOrdinal.{All, Read1, Read2}
 import com.cvbio.commons.CommonsDef._
-import com.fulcrumgenomics.bam.Bams.templateIterator
+import com.cvbio.commons.io.Io
+import com.fulcrumgenomics.FgBioDef.{DirPath, FgBioEnum}
+import com.fulcrumgenomics.bam.Bams.sorter
 import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.SamOrder.Queryname
-import com.fulcrumgenomics.bam.api.{SamRecord, SamSource}
+import com.fulcrumgenomics.bam.api.{SamOrder, SamRecord, SamSource}
 import com.fulcrumgenomics.commons.collection.SelfClosingIterator
 import com.fulcrumgenomics.commons.util.LazyLogging
-import htsjdk.samtools.{SAMTag => SamTag}
+import com.fulcrumgenomics.util.ProgressLogger
+import enumeratum.EnumEntry
+import htsjdk.samtools.util.CloserUtil
+import htsjdk.samtools.{SAMFileHeader => SamFileHeader}
 
 /** Common methods for working with SAM/BAM files. */
 object Bams extends LazyLogging {
 
-  /** Implicit class that makes working with the alignment metrics in a [[Template]] easier. */
+  /** The default max records to keep in memory when sorting. */
+  val DefaultMaxRecordsInMemory: Int = 1e6.toInt
+
+  /** The default temporary directory for disk-backed sorting. */
+  lazy val DefaultSortingTempDirectory: DirPath = Io.makeTempDir(name = "BamSort")
+
+  /** Implicit class that makes working with a [[Template]] easier. */
   implicit class TemplateUtil(private val template: Template) {
 
-    /** Create a collection of all [[SamRecord]]s that are read1. */
-    def allR1: Iterator[SamRecord] = template.r1.iterator ++ template.r1Secondaries.iterator ++ template.r1Supplementals.iterator
-
-    /** Create a collection of all [[SamRecord]]s that are read2. */
-    def allR2: Iterator[SamRecord] = template.r2.iterator ++ template.r2Secondaries.iterator ++ template.r2Supplementals.iterator
-
-    /** Return the SAM tag values for a specific SAM tag across all read1. */
-    def allR1[T](tag: SamTag): Iterator[Option[T]] = allR1.map(_.get[T](tag.toString))
-
-    /** Return the SAM tag values for a specific SAM tag across all read1. */
-    def allR2[T](tag: SamTag): Iterator[Option[T]] = allR2.map(_.get[T](tag.toString))
+    /** Return the SAM tags across a specific read ordinal. */
+    def tagValues[T](ordinal: ReadOrdinal, tag: SamTag): Seq[Option[T]] = {
+      ordinal match {
+        case All   => template.allReads.toSeq.map(_.get[T](tag))
+        case Read1 => (template.r1 ++: template.r1Secondaries ++: template.r1Supplementals).map(_.get[T](tag))
+        case Read2 => (template.r2 ++: template.r2Secondaries ++: template.r2Supplementals).map(_.get[T](tag))
+      }
+    }
   }
 
-  /** Collectively iterate through [[SamSource]] iterators and emit templates of the same name, albeit with potentially
-    * different alignments.
+  /** Trait that all enumeration values of type [[ReadOrdinal]] should extend. */
+  sealed trait ReadOrdinal extends EnumEntry with Product with Serializable
+
+  /** Contains enumerations of read ordinals. */
+  object ReadOrdinal extends FgBioEnum[ReadOrdinal] {
+
+    /** Return all read ordinals. */
+    def values: scala.collection.immutable.IndexedSeq[ReadOrdinal] = findValues
+
+    /** All read ordinals. */
+    case object All extends ReadOrdinal
+
+    /** The read ordinal for read one. */
+    case object Read1 extends ReadOrdinal
+
+    /** The read ordinal for read two. */
+    case object Read2 extends ReadOrdinal
+  }
+
+  /** Collectively iterate through [[SamSource]] iterators and emit templates of the same query.
     *
-    * All [[SamSource]]'s must be query name sorted and all templates must be synchronized by read name.
-    * */
+    * Reads will be grouped and sorted into queryname order if they are not already. All [[SamSource]] must contain
+    * the same templates by query name.
+    *
+    * @param sources the SAM sources to iterate over
+    * @return a self-closing iterator over all templates in all SAM sources sorted by name
+    */
   def templatesIterator(sources: SamSource*): SelfClosingIterator[Seq[Template]] = {
-    val templateIterators = sources
-      .map { source: SamSource =>
-        require(querynameSorted(source), s"SAM source is not queryname sorted: $source")
-        templateIterator(in = source)
-      }
+    val iterator: Iterator[Seq[Template]] = new Iterator[Seq[Template]] {
 
-    val iterator = new Iterator[Seq[Template]] {
+      /** The underlying template iterators. */
+      private val underlying = sources.map(sortedTemplateIterator(_))
 
-      /** Check to see if all underlying iterators have another [[com.fulcrumgenomics.bam.Template]] or not. */
+      /** Test all template iterators to see if they have another template to emit. */
       override def hasNext: Boolean = {
-        val allHasNext = templateIterators.map(_.hasNext)
-        require(allHasNext.distinct.length <= 1, "SAM sources do not have the same number of templates")
-        if (allHasNext.isEmpty) false else allHasNext.forall(_ == true)
+        underlying
+          .map(_.hasNext)
+          .ensuring(_.distinct.length <= 1, "SAM sources do not have the same number of templates!")
+          .contains(true)
       }
 
-      /** Grab the next sequence of [[com.fulcrumgenomics.bam.Template]]. */
+      /** Advance to the next sequence of templates. */
       override def next(): Seq[Template] = {
         require(hasNext, "next() called on empty iterator")
-        val templates = templateIterators.map(_.next)
-        require(templates.map(_.name).distinct.length <= 1, s"Templates do not have the same name: " + templates.mkString(", "))
-        templates
+        underlying
+          .map(_.next)
+          .ensuring(templates =>
+            templates.map(_.name).distinct.length <= 1,
+            "Templates with different names found! This can only occur if your SAM sources are queryname sorted using"
+              + " different implementations, such as with Picard tools versus Samtools. If you have encountered this"
+              + " exception, then please alert the maintainer!"
+          )
       }
     }
 
     new SelfClosingIterator(iterator, () => sources.foreach(_.safelyClose()))
   }
 
-  /** Test if a [[SamSource]] is queryname sorted. */
-  private[cvbio] def querynameSorted(source: SamSource): Boolean = Option(source.header.getSortOrder).contains(Queryname.sortOrder)
+  /** Returns an iterator over records in such a way that all reads with the same query name are adjacent in the
+    * iterator. Although a queryname sort is guaranteed, the sort order may not be consistent with other queryname
+    * sorting implementations, especially in other tool kits.
+    *
+    * @param iterator an iterator from which to consume records
+    * @param header the header associated with the records
+    * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
+    * @param tmpDir a temp directory to use for temporary sorting files if sorting is needed
+    * @return an [[scala.Iterator]] with reads from the same query grouped together
+    */
+  def querySortedIterator(
+    iterator: Iterator[SamRecord],
+    header: SamFileHeader,
+    maxInMemory: Int = DefaultMaxRecordsInMemory,
+    tmpDir: DirPath  = DefaultSortingTempDirectory
+  ): SelfClosingIterator[SamRecord] = {
+    (SamOrder(header), iterator) match {
+      case (Some(Queryname), _iterator: SelfClosingIterator[SamRecord]) => _iterator
+      case (Some(Queryname), _) => new SelfClosingIterator(iterator.bufferBetter, () => CloserUtil.close(iterator))
+      case (_, _) =>
+        logger.info(parts = "Sorting into queryname order.")
+        val progress = ProgressLogger(this.logger, "Records", "sorted")
+        val sort     = sorter(Queryname, header, maxInMemory, tmpDir)
+        iterator.tapEach(progress.record).foreach(sort.write)
+        new SelfClosingIterator(sort.iterator, () => sort.close())
+    }
+  }
+
+  /** Return an iterator over records sorted and grouped into [[Template]] objects. Although a queryname sort is
+    * guaranteed, the sort order may not be consistent with other queryname sorting implementations, especially in other
+    * tool kits. See [[com.fulcrumgenomics.bam.Bams.templateIterator]] for a [[Template]] iterator which emits templates
+    * in a non-guaranteed sort order.
+    *
+    * @see [[com.fulcrumgenomics.bam.Bams.templateIterator]]
+    *
+    * @param in a [[SamSource]] from which to consume records
+    * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
+    * @param tmpDir an optional temp directory to use for temporary sorting files if needed
+    * @return an [[Iterator]] of query sorted [[Template]] objects
+    */
+  def sortedTemplateIterator(
+    in: SamSource,
+    maxInMemory: Int = DefaultMaxRecordsInMemory,
+    tmpDir: DirPath  = DefaultSortingTempDirectory
+  ): SelfClosingIterator[Template] = sortedTemplateIterator(in.iterator, in.header, maxInMemory, tmpDir)
+
+  /** Return an iterator over records sorted and grouped into [[Template]] objects. Although a queryname sort is
+    * guaranteed, the sort order may not be consistent with other queryname sorting implementations, especially in other
+    * tool kits. See [[com.fulcrumgenomics.bam.Bams.templateIterator]] for a [[Template]] iterator which emits templates
+    * in a non-guaranteed sort order.
+    *
+    * @see [[com.fulcrumgenomics.bam.Bams.templateIterator]]
+    *
+    * @param iterator an iterator from which to consume records
+    * @param header the header associated with the records
+    * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
+    * @param tmpDir a temp directory to use for temporary sorting files if sorting is needed
+    * @return an [[Iterator]] of query sorted [[Template]] objects
+    */
+  def sortedTemplateIterator(
+    iterator: Iterator[SamRecord],
+    header: SamFileHeader,
+    maxInMemory: Int,
+    tmpDir: DirPath
+  ): SelfClosingIterator[Template] = {
+    val queryIterator = querySortedIterator(iterator, header, maxInMemory, tmpDir)
+
+    val _iterator = new Iterator[Template] {
+      override def hasNext: Boolean = queryIterator.hasNext
+      override def next: Template   = {
+        require(hasNext, "next() called on empty iterator")
+        Template(queryIterator)
+      }
+    }
+
+    new SelfClosingIterator(_iterator, () => queryIterator.close())
+  }
 }

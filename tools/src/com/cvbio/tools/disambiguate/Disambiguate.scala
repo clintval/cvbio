@@ -1,37 +1,54 @@
 package com.cvbio.tools.disambiguate
 
-import com.cvbio.bam.Bams.{TemplateUtil, templatesIterator}
+import com.cvbio.bam.Bams.templatesIterator
 import com.cvbio.commons.CommonsDef._
+import com.cvbio.commons.io.Io
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.cvbio.tools.disambiguate.Disambiguate.DisambiguationStrategy.ClassicDisambiguationStrategy
-import com.cvbio.tools.disambiguate.Disambiguate.{DisambiguationStrategy, firstAssemblyName}
-import com.fulcrumgenomics.FgBioDef.FgBioEnum
-import com.fulcrumgenomics.bam.Template
-import com.fulcrumgenomics.bam.api.{SamSource, SamWriter}
-import com.fulcrumgenomics.commons.io.{Io, PathUtil}
-import com.fulcrumgenomics.sopt._
-import enumeratum.EnumEntry
-import htsjdk.samtools.SAMTag.{AS, NM}
+import com.cvbio.tools.disambiguate.Disambiguate.{AmbiguousOutputDirName, firstAssemblyName}
+import com.cvbio.tools.disambiguate.DisambiguationStrategy.Classic
+import com.fulcrumgenomics.bam.api.{SamOrder, SamSource, SamWriter}
+import com.fulcrumgenomics.commons.io.PathUtil
+import com.fulcrumgenomics.sopt.{arg, clp}
 
 @clp(
   description =
     """
       |Disambiguate reads that were mapped to multiple references.
       |
-      |Disambiguation of mapped reads is performed per-template and all information across primary, secondary, and
-      |supplementary alignments is used as evidence. Alignment disambiguation is useful when analyzing sequencing data
-      |from transduction, transfection, xenographic (including patient derived xenografts), and transgenic experiments.
-      |This tool works by comparing various alignment scores between a template that has been mapped to many references
-      |in order to determine which reference is the most likely source.
+      |Disambiguation of aligned reads is performed per-template and all information across primary, secondary, and
+      |supplementary alignments is used as evidence. Alignment disambiguation is commonly used when analyzing sequencing
+      |data from transduction, transfection, transgenic, or xenographic (including patient derived xenograft)
+      |experiments. This tool works by comparing various alignment scores between a template that has been aligned to
+      |many references in order to determine which reference is the most likely source.
       |
       |All templates which are positively assigned to a single source reference are written to a reference-specific
-      |output BAM file. Any templates with ambiguous reference assignment are currently dropped.
+      |output BAM file. Any templates with ambiguous reference assignment are written to an ambiguous input-specific
+      |output BAM file. Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
       |
-      |### Caveats
+      |Input BAMs of arbitrary sort order are accepted, however, an internal sort to queryname will be performed unless
+      |the BAM is already in queryname sort order. All output BAM files will be written in the same sort order as the
+      |input BAM files. Although paired-end reads will give the most discriminatory power for disambiguation of short-
+      |read sequencing data, this tool accepts paired, single-end (fragment), and mixed pairing input data.
       |
-      |  - No ambiguous BAM is currently written to the output prefix.
-      |  - All input BAM files must be queryname grouped and synchronized on the read name.
-      |  - Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
+      |### Example
+      |
+      |To disambiguate templates that are aligned to human (A) and mouse (B):
+      |
+      |```
+      |❯ java -jar cvbio.jar Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
+      |
+      |❯ tree sample/
+      |  sample/
+      |  ├── ambiguous-alignments/
+      |  │  ├── sample.A.ambiguous.bai
+      |  │  ├── sample.A.ambiguous.bam
+      |  │  ├── sample.B.ambiguous.bai
+      |  │  └── sample.B.ambiguous.bam
+      |  ├── sample.hg38.bai
+      |  ├── sample.hg38.bam
+      |  ├── sample.mm10.bai
+      |  └── sample.mm10.bam
+      |```
       |
       |### Glossary
       |
@@ -45,144 +62,69 @@ import htsjdk.samtools.SAMTag.{AS, NM}
     """,
   group  = ClpGroups.SamOrBam
 ) class Disambiguate(
-  @arg(flag = 'i', doc = "The queryname-sorted BAMs to disambiguate.") val input: Seq[PathToBam],
+  @arg(flag = 'i', doc = "The BAMs to disambiguate.") val input: Seq[PathToBam],
   @arg(flag = 'p', doc = "The output file prefix (e.g. dir/sample_name).") val prefix: PathPrefix,
-  @arg(flag = 's', doc = "The disambiguation strategy to use.") val strategy: DisambiguationStrategy = ClassicDisambiguationStrategy,
-  @arg(flag = 'n', doc = "The reference names. Default to the first Assembly Name in the BAM header.", minElements = 0) val referenceName: Seq[String] = Seq.empty
+  @arg(flag = 's', doc = "The disambiguation strategy to use.") private val strategy: DisambiguationStrategy = Classic,
+  @arg(flag = 'n', doc = "The reference names. Default to the first Assembly Name in the BAM header.", minElements = 0) val referenceNames: Seq[String] = Seq.empty,
 ) extends CvBioTool {
 
-  override def execute(): Unit = {
-    Io.mkdirs(prefix.getParent)
-    Io.assertCanWriteFile(prefix)
+  Io.assertReadable(input)
 
-    val writers = sources
-      .zip(assemblyNames)
-      .map { case (source, name) => SamWriter(path = PathUtil.pathTo(prefix + s".$name$BamExtension"), header = source.header) }
+  /** Execute [[Disambiguate]] on all inputs. */
+  override def execute(): Unit = {
+    Seq(prefix.getParent, prefix.resolveSibling(AmbiguousOutputDirName)).foreach(Io.mkdirs)
+
+    val sources            = input.map(bam => SamSource(bam))
+    val ambiguousWriters   = input.map(bam => ambiguousWriter(bam, prefix = prefix))
+    val unambiguousWriters = input.zip(finalizedNames).map { case (bam, name) => unambiguousWriter(bam, prefix = prefix, name = name) }
 
     templatesIterator(sources: _*)
       .foreach { templates =>
-        strategy.indexOfBest(templates) match {
-          case Some(index) => writers(index).write(templates(index).allReads)
-          case None        => // TODO: Write out the ambiguous alignments.
+        strategy.choose(templates).map(templates.indexOf) match {
+          case Some(index) => unambiguousWriters(index).write(templates(index).allReads)
+          case None => templates.zip(ambiguousWriters).foreach { case (template, writer) => writer.write(template.allReads) }
         }
       }
 
-    writers.foreach(_.close())
+    (ambiguousWriters ++ unambiguousWriters).foreach(_.close())
   }
 
-  /** Fetch the first assembly names from the input BAMs unless provided on the CLI. */
-  private def assemblyNames: Seq[String] = {
-    if (referenceName.nonEmpty) {
-      require(input.lengthCompare(referenceName.length) == 0, s"There must be a reference name for every input BAM, or None. Found: ${referenceName.mkString(", ")}")
-      require(referenceName.distinct.length == referenceName.length, s"No redundant reference names are allowed. Found: ${referenceName.mkString(", ")}")
-      referenceName.map { name => PathUtil.sanitizeFileName(fileName = name) }
-    } else {
-      val names = sources.flatMap(source => firstAssemblyName(source))
-      require(names.lengthCompare(sources.length) == 0, s"Not all BAM have their first assembly name defined. Found: ${names.mkString(", ")}")
-      require(names.distinct.lengthCompare(names.length) == 0, s"BAMs with the same assembly name are not allowed. Found: ${names.mkString(", ")}")
-      names
-    }
+  /** Return the finalized reference names to use when writing out disambiguated BAMs. */
+  private[disambiguate] def finalizedNames: Seq[String] = {
+    val names = if (referenceNames.nonEmpty) referenceNames else input.flatMap(firstAssemblyName)
+    require(names.length == input.length, s"Not all BAM have a reference name defined. Found: ${names.mkString(", ")}")
+    require(names.distinct.length == names.length, s"No redundant reference names allowed. Found: ${names.mkString(", ")}")
+    names
   }
 
-  /** Check that each BAM is readable and return its [[SamSource]]. */
-  private def sources: Seq[SamSource] = {
-    Io.assertReadable(input)
-    input.map(path => SamSource(path))
+  /** Return an ambiguous SAM Writer that will write to a path within <prefix> making use of the <input> filename. */
+  private[disambiguate] def ambiguousWriter(input: PathToBam, prefix: PathPrefix): SamWriter = {
+    val source   = SamSource(input)
+    val header   = source.header.clone()
+    val filename = PathUtil.replaceExtension(input, s".ambiguous$BamExtension").getFileName
+    val path     = prefix.resolveSibling(AmbiguousOutputDirName).resolve(filename)
+    yieldAndThen(SamWriter(path = path, header = header, sort = SamOrder(header)))(source.safelyClose())
+  }
+
+  /** Return an unambiguous SAM Writer to a path starting with <prefix> and containing <name> infix. */
+  private[disambiguate] def unambiguousWriter(input: PathToBam, prefix: PathPrefix, name: String): SamWriter = {
+    val source = SamSource(input)
+    val header = source.header.clone()
+    val path   = PathUtil.pathTo(prefix + s".$name$BamExtension")
+    yieldAndThen(SamWriter(path = path, header = header, sort = SamOrder(header)))(source.safelyClose())
   }
 }
 
 /** Companion object to [[Disambiguate]]. */
 object Disambiguate {
 
-  /** Look up the first reference sequence assembly name from the SamSource's sequence dictionary. */
-  private[disambiguate] def firstAssemblyName(source: SamSource): Option[String] = {
-    source
-      .header
-      .getSequenceDictionary
-      .getSequences
-      .toStream
-      .headOption
-      .flatMap { record => Option(record.getAssembly) }
-  }
+  /** The directory in the output prefix that will hold ambiguous alignments. */
+  val AmbiguousOutputDirName: Filename = "ambiguous-alignments"
 
-  /** Implicits for counting the number of maximum items in a collection. */
-  private[disambiguate] implicit class WithMaxCount[T](self: Iterable[T]) {
-
-    /** Return the number of maximally occurring items in a collection of items. */
-    def maxCount(fn: T => Int): Int = self.count(p => self.map(fn).reduceOption(_ max _).contains(fn(p)))
-  }
-
-  /** A container to hold the best alignment scores per [[Template]]. */
-  private[disambiguate] case class BestAlignmentScores(r1AS: Int, r2AS: Int, r1NM: Int, r2NM: Int) {
-    def maxAS: Int = r1AS max r2AS
-    def minAS: Int = r1AS min r2AS
-    def maxNM: Int = r1NM max r2NM
-    def minNM: Int = r1NM min r2NM
-  }
-
-  /** Companion object to [[BestAlignmentScores]]. */
-  private[disambiguate] object BestAlignmentScores {
-
-    /** Build a [[BestAlignmentScores]] from a [[Template]]. */
-    def apply(template: Template): BestAlignmentScores = {
-      new BestAlignmentScores(
-        r1AS = template.allR1[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
-        r2AS = template.allR2[Int](AS).flatten.reduceOption(_ max _).getOrElse(0),
-        r1NM = template.allR1[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue),
-        r2NM = template.allR2[Int](NM).flatten.reduceOption(_ min _).getOrElse(Int.MaxValue)
-      )
-    }
-  }
-  /** Trait that all enumeration values of type [[DisambiguationStrategy]] should extend. */
-  sealed trait DisambiguationStrategy extends EnumEntry {
-
-    /** Take in a sequence of templates and return the the one with the most optimal alignment. */
-    def choose(templates: Seq[Template]): Option[Template]
-
-    /** Return the index of the most optimally aligned template. */
-    def indexOfBest(templates: Seq[Template]): Option[Int] = choose(templates).map(templates.indexOf)
-  }
-
-  /** Contains enumerations of template disambiguation strategies. */
-  object DisambiguationStrategy extends FgBioEnum[DisambiguationStrategy] {
-
-    /** Return all available disambiguation strategies. */
-    def values: scala.collection.immutable.IndexedSeq[DisambiguationStrategy] = findValues
-
-    /** Test if all reads of all templates are unmapped or not. */
-    private def allUnmapped(templates: Seq[Template]): Boolean = {
-      templates.map(_.allReads.forall(_.unmapped == true)).forall(_ == true)
-    }
-
-    /** The value when [[DisambiguationStrategy]] is the original published algorithm. */
-    case object ClassicDisambiguationStrategy extends DisambiguationStrategy {
-
-      /** Pick the template by using the following logic:
-        *
-        * 1. Choose the template with the highest max alignment score, if there are multiple, move on.
-        * 2. Choose the template with the highest min alignment score, if there are multiple, move on.
-        * 3. Choose the template with the lowest min alignment edit distance, if there are multiple, move on.
-        * 4. Choose the template with the lowest max alignment edit distance, if there are multiple, move on.
-        * 5. Return None because this template is ambiguous across all alignments.
-        *
-        * While making choices, ensure we always compare read1 against read1 in all templates, and read2 against read2.
-        * */
-      def choose(templates: Seq[Template]): Option[Template] = {
-
-        val bestScores = templates.map(BestAlignmentScores.apply)
-
-        if (templates.isEmpty || allUnmapped(templates)) {
-          None
-        } else if (bestScores.maxCount(_.maxAS) == 1) {
-          Some(templates.maxBy(BestAlignmentScores(_).maxAS))
-        } else if (bestScores.maxCount(_.minAS) == 1) {
-          Some(templates.maxBy(BestAlignmentScores(_).minAS))
-        } else if (bestScores.maxCount(_.minNM) == 1) {
-          Some(templates.minBy(BestAlignmentScores(_).minNM))
-        } else if (bestScores.maxCount(_.maxNM) == 1) {
-          Some(templates.minBy(BestAlignmentScores(_).maxNM))
-        } else { None }
-      }
-    }
+  /** Return the first reference sequence assembly name from a SAM file's sequence dictionary. */
+  private[disambiguate] def firstAssemblyName(input: PathToBam): Option[String] = {
+    val source    = SamSource(input)
+    val sequences = source.header.getSequenceDictionary.getSequences
+    yieldAndThen(sequences.toStream.headOption.flatMap(record => Option(record.getAssembly)))(source.safelyClose)
   }
 }

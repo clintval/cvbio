@@ -1,3 +1,4 @@
+
 package com.cvbio.pipeline.cmdline
 
 import com.fulcrumgenomics.sopt.cmdline.ClpGroup
@@ -10,17 +11,17 @@ object ClpGroups {
     override val description: String = "AdHoc pipelines without a home yet."
   }
 
-  class _ReferenceData extends ClpGroup {
-    override val name: String = "Reference Data"
-    override val description: String = "Pipelines for downloading and preparing reference data."
+  class _SamOrBam extends ClpGroup {
+    override val name: String = "SAM/BAM"
+    override val description: String = "Tools for manipulating SAM, BAM, or related data."
   }
 
-  class _Rna extends ClpGroup {
-    override val name: String = "RNA"
-    override val description: String = "Pipelines for RNA or cDNA processing"
+  class _Utilities extends ClpGroup {
+    override val name: String = "Utilities"
+    override val description: String = "Utility and reference data management tools"
   }
 
-  final val AdHoc         = classOf[_AdHoc]
-  final val ReferenceData = classOf[_ReferenceData]
-  final val Rna           = classOf[_Rna]
+  final val AdHoc    = classOf[_AdHoc]
+  final val SamOrBam = classOf[_SamOrBam]
+  final val Utility  = classOf[_Utilities]
 }

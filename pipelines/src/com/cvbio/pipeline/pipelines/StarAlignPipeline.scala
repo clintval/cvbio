@@ -18,7 +18,7 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     """
       |Align paired-end reads with the `STAR` aligner.
     """,
-  group = ClpGroups.Rna
+  group = ClpGroups.SamOrBam
 ) class StarAlignPipeline(
   @arg(flag = 'i', doc = "Path to the input unmapped BAM.") val input: PathToBam,
   @arg(flag = 'g', doc = "The STAR genome directory.") val genomeDir: DirPath,

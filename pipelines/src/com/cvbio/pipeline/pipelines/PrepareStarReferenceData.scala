@@ -19,12 +19,16 @@ import dagr.core.tasksystem.Pipeline
       |genomic sequence around the annotated junction to be used in constructing the splice junctions database. Ideally,
       |this value should be equal to:
       |
+      |```
       |Read Length - 1
+      |```
       |
       |Where "Read Length" is the length of the reads. For example, given Illumina 100 bp paired-end reads, the ideal
       |value is `100 - 1 == 99`. In the case of varying read length, the ideal value is:
       |
+      |```
       |max(Read Length) - 1
+      |```
       |
       |In most cases, the default value of 100 will work as well as the ideal value.
       |
@@ -32,7 +36,7 @@ import dagr.core.tasksystem.Pipeline
       |
       |  - http://labshare.cshl.edu/shares/gingeraslab/www-data/dobin/STAR/STAR.posix/doc/STARmanual.pdf
     """,
-  group = ClpGroups.ReferenceData
+  group = ClpGroups.Utility
 ) class PrepareStarReferenceData(
   @arg(flag = 'i', doc = "Input FASTA files.") val fasta: Seq[PathToFasta],
   @arg(flag = 'g', doc = "The transcripts in GTF format.") val gtf: PathToGtf,

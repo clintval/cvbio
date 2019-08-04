@@ -1,3 +1,5 @@
+import mill.contrib.scoverage.ScoverageModule
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:0.5.0`
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
@@ -13,8 +15,9 @@ private val fgbioVersion        = "0.9.0-f2cfac4-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
-trait CommonModule extends ScalaModule {
-  def scalaVersion = "2.12.2"
+trait CommonModule extends ScalaModule with ScoverageModule {
+  def scalaVersion     = "2.12.2"
+  def scoverageVersion = "1.3.1"
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/public"),
@@ -53,7 +56,7 @@ object commons extends CommonModule {
     ExcludePattern(".*chromosome-mappings/README.md")
   )
 
-  object test extends Tests with ScalaTest { override def moduleDeps = Seq(commons) }
+  object test extends ScoverageTests with ScalaTest { override def moduleDeps = Seq(commons) }
 }
 
 object pipelines extends CommonModule {
@@ -64,9 +67,9 @@ object pipelines extends CommonModule {
 
   override def moduleDeps = Seq(commons)
 
-  def localJar = T { super.localJar(assembly(), jarName="cvbio-pipelines.jar") }
+  def localJar = T { super.localJar(assembly(), jarName = "cvbio-pipelines.jar") }
 
-  object test extends Tests with ScalaTest { override def moduleDeps = Seq(pipelines, commons.test) }
+  object test extends ScoverageTests with ScalaTest { override def moduleDeps = Seq(pipelines, commons.test) }
 }
 
 object tools extends CommonModule {
@@ -77,7 +80,7 @@ object tools extends CommonModule {
 
   override def moduleDeps = Seq(commons)
 
-  def localJar = T { super.localJar(assembly(), jarName="cvbio.jar") }
+  def localJar = T { super.localJar(assembly(), jarName = "cvbio.jar") }
 
-  object test extends Tests with ScalaTest { override def moduleDeps = Seq(tools, commons.test) }
+  object test extends ScoverageTests with ScalaTest { override def moduleDeps = Seq(tools, commons.test) }
 }

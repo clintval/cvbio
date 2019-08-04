@@ -11,10 +11,14 @@ install:
   - export PATH=~/bin/mill:$PATH
 before_script:
   - travis_retry mill clean
-  - mill --disable-ticker -s _.compile
+  - mill --disable-ticker -s _.scoverage.compile
 script:
   - mill --disable-ticker -s _.test
+  - mill --disable-ticker -s _.scoverage.xmlReport
+  - mill --disable-ticker -s _.scoverage.htmlReport
   - mill --disable-ticker -s _.localJar
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
 cache:
