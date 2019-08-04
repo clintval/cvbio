@@ -1,9 +1,11 @@
-package com.cvbio.tool.bam
+package com.cvbio.tools.bam
 
 import com.cvbio.commons.CommonsDef._
-import com.cvbio.tool.cmdline.{ClpGroups, CvBioTool}
+import com.cvbio.tool.cmdline.ClpGroups
+import com.cvbio.tools.cmdline.CvBioTool
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt._
+import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
 
 @clp(
   description =
@@ -32,7 +34,7 @@ import com.fulcrumgenomics.sopt._
 ) class AltPostProcessor(
   @arg(flag = 'i', doc = "The input BAM.") val in: PathToBam,
   @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathToBam,
-  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Double = AltPostProcessor.MinPaRatio
+  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Double = MinPaRatio
 ) extends CvBioTool {
 
   require(minPaRatio >= 0 && minPaRatio <= 1, s"The minimum `pa` ratio must be within 0 to 1 inclusive. Found: $minPaRatio")
