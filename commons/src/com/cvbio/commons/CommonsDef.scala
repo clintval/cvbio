@@ -2,8 +2,14 @@ package com.cvbio.commons
 
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.{CommonsDef => FgBioCommonsDef}
-import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
 import htsjdk.samtools.util.FileExtensions
+import eu.timepit.refined.W
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.string.MatchesRegex
+import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
+import htsjdk.samtools.{SAMTag => HtsJdkSamTag}
+
+import scala.language.implicitConversions
 
 object CommonsDef extends FgBioCommonsDef {
 
@@ -69,6 +75,16 @@ object CommonsDef extends FgBioCommonsDef {
   /** Represents a path to an Illumina Sample Sheet. */
   type PathToSampleSheet = java.nio.file.Path
 
+  /** Implicitly convert various SAM tags. */
+  object SamTagConversions {
+
+    /** Cast an HTSJDK SAM tag to a `cvbio` [[SamTag]]. */
+    implicit def htsJdkToSamTag(tag: HtsJdkSamTag): SamTag = tag.toString.asInstanceOf[SamTag]
+
+    /** Cast a `cvbio` [[SamTag]] to a [[String]]. */
+    implicit def samTagToString(tag: SamTag): String = tag.asInstanceOf[String]
+  }
+
   /** Represents a SAM tag. */
-  type SamTag = String
+  type SamTag = String Refined MatchesRegex[W.`"[A-Za-z][A-Za-z0-9]"`. T]
 }

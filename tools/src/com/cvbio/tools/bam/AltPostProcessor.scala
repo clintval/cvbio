@@ -1,11 +1,13 @@
 package com.cvbio.tools.bam
 
 import com.cvbio.commons.CommonsDef._
-import com.cvbio.tool.cmdline.ClpGroups
+import com.cvbio.commons.MathUtil.Ratio
+import com.cvbio.tools.cmdline.ClpGroups
+import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
 import com.cvbio.tools.cmdline.CvBioTool
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt._
-import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
+import eu.timepit.refined.auto._
 
 @clp(
   description =
@@ -34,7 +36,7 @@ import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
 ) class AltPostProcessor(
   @arg(flag = 'i', doc = "The input BAM.") val in: PathToBam,
   @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathToBam,
-  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Double = MinPaRatio
+  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Ratio = MinPaRatio
 ) extends CvBioTool {
 
   require(minPaRatio >= 0 && minPaRatio <= 1, s"The minimum `pa` ratio must be within 0 to 1 inclusive. Found: $minPaRatio")
@@ -48,11 +50,12 @@ import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
 /** Constants and defaults that are used across the [[AltPostProcessor]]. */
 object AltPostProcessor {
 
+
   /** The minimum ratio of the primary assembly alignment score over the highest alternate contig alignment score. */
-  val MinPaRatio: Double = 1
+  val MinPaRatio: Ratio = 0.2
 
   /** The tag which stores the ratio of alignment scores between a primary assembly alignment and the highest alternate
     * contig alignment score.
     */
-  val PaTag: String = "pa"
+  val PaTag: SamTag = "pa"
 }

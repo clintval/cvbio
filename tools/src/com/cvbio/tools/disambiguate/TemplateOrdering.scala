@@ -30,8 +30,10 @@ object TemplateOrdering extends FgBioEnum[TemplateOrdering] {
 
     /** Compare two templates using the original published algorithm. */
     override def compare(x: Template, y: Template): Int = {
-      val alignmentScore = (template: Template) => MetricPair[Int](template, AS.toString)(_ max _)
-      val numMismatches  = (template: Template) => MetricPair[Int](template, NM.toString)(_ min _)
+      import com.cvbio.commons.CommonsDef.SamTagConversions._
+
+      val alignmentScore = (template: Template) => MetricPair[Int](template, AS)(_ max _)
+      val numMismatches  = (template: Template) => MetricPair[Int](template, NM)(_ min _)
 
       var compare = alignmentScore(x).compare(alignmentScore(y))
       if (compare == 0) compare = -numMismatches(x).compare(numMismatches(y)) // Negate because less is better.

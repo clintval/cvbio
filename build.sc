@@ -102,6 +102,7 @@ object commons extends CommonModule {
 
   /** Ivy dependencies. */
   override def ivyDeps = Agg(
+    ivy"eu.timepit::refined::0.9.9",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
     ivy"org.reflections:reflections:0.9.11",
