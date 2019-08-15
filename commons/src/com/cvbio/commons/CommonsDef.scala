@@ -78,13 +78,10 @@ object CommonsDef extends FgBioCommonsDef {
   /** Implicitly convert various SAM tags. */
   object SamTagConversions {
 
-    /** Cast an HTSJDK SAM tag to a `cvbio` [[SamTag]]. */
-    implicit def htsJdkToSamTag(tag: HtsJdkSamTag): SamTag = tag.toString.asInstanceOf[SamTag]
-
-    /** Cast a `cvbio` [[SamTag]] to a [[String]]. */
-    implicit def samTagToString(tag: SamTag): String = tag.asInstanceOf[String]
+    /** Cast an HTSJDK SAM tag to string. */
+    implicit def htsJdkToSamTag(tag: HtsJdkSamTag): SamTag = tag.toString
   }
 
   /** Represents a SAM tag. */
-  type SamTag = String Refined MatchesRegex[W.`"[A-Za-z][A-Za-z0-9]"`. T]
+  type SamTag = String // Refined MatchesRegex[W.`"[A-Za-z][A-Za-z0-9]"`.T]
 }

@@ -2,7 +2,6 @@ package com.cvbio.bam
 
 import com.cvbio.bam.Bams.ReadOrdinal.{All, Read1, Read2}
 import com.cvbio.commons.CommonsDef._
-import com.cvbio.commons.CommonsDef.SamTagConversions._
 import com.cvbio.commons.io.Io
 import com.fulcrumgenomics.FgBioDef.{DirPath, FgBioEnum}
 import com.fulcrumgenomics.bam.Bams.sorter
