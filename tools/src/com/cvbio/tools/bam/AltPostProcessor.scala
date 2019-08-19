@@ -7,6 +7,7 @@ import com.cvbio.tools.bam.AltPostProcessor.MinPaRatio
 import com.cvbio.tools.cmdline.CvBioTool
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt._
+import com.fulcrumgenomics.util.NumericTypes.PhredScore
 import eu.timepit.refined.auto._
 
 @clp(
@@ -35,21 +36,22 @@ import eu.timepit.refined.auto._
   group  = ClpGroups.SamOrBam
 ) class AltPostProcessor(
   @arg(flag = 'i', doc = "The input BAM.") val in: PathToBam,
-  @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: PathToBam,
-  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Ratio = MinPaRatio
+  @arg(flag = 'r', doc = "Reduce mapQ to 0 if not overlapping lifted best and `pa` is less than this number") val minPaRatio: Ratio = MinPaRatio,
+  @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1.)") val prefix: Option[PathPrefix] = None
 ) extends CvBioTool {
 
   require(minPaRatio >= 0 && minPaRatio <= 1, s"The minimum `pa` ratio must be within 0 to 1 inclusive. Found: $minPaRatio")
 
   override def execute(): Unit = {
     Io.assertReadable(in)
-    Io.assertCanWriteFile(prefix)
   }
 }
 
 /** Constants and defaults that are used across the [[AltPostProcessor]]. */
 object AltPostProcessor {
 
+  /** The mininmum mapping quality to use when filtering reads. */
+  val MinMapQ: PhredScore = PhredScore.cap(score = 10)
 
   /** The minimum ratio of the primary assembly alignment score over the highest alternate contig alignment score. */
   val MinPaRatio: Ratio = 0.2

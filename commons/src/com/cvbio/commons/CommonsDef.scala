@@ -2,11 +2,11 @@ package com.cvbio.commons
 
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.{CommonsDef => FgBioCommonsDef}
-import htsjdk.samtools.util.FileExtensions
 import eu.timepit.refined.W
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.MatchesRegex
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
+import htsjdk.samtools.util.FileExtensions
 import htsjdk.samtools.{SAMTag => HtsJdkSamTag}
 
 import scala.language.implicitConversions
