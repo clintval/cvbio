@@ -1,5 +1,4 @@
 import mill.contrib.scoverage.ScoverageModule
-import $ivy.`com.lihaoyi::mill-contrib-scoverage:0.5.0`
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
