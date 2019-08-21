@@ -69,4 +69,22 @@ class MetricPairTest extends UnitSpec {
     test3 >= test4
     test4 >= test3
   }
+
+  it should "support checking if it can be equal to another instance" in {
+    val test1 = new MetricPair[Int](Some(10), Some(2))
+    val test2 = new MetricPair[Int](Some(22), Some(3))
+    test1.canEqual(test1) shouldBe true
+    test1.canEqual(test2) shouldBe true
+    test1.canEqual(2) shouldBe false
+    test1.canEqual("nope") shouldBe false
+  }
+
+  it should "support equality checking" in {
+    val test1 = new MetricPair[Int](Some(10), Some(2))
+    val test2 = new MetricPair[Int](Some(22), Some(3))
+    test1.equals(test1) shouldBe true
+    test1.equals(test2) shouldBe false
+    test1.equals(2) shouldBe false
+    test1.equals("nope") shouldBe false
+  }
 }
