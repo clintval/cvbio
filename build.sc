@@ -61,7 +61,7 @@ object commons extends CommonModule {
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
     ivy"org.reflections:reflections:0.9.11",
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
-
+  )
 
   /** Test the tools commons project. */
   object test extends Tests with ScalaTest with ScoverageTests
