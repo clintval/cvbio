@@ -63,7 +63,7 @@ object commons extends CommonModule {
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
 
-  /** Test the tools commons project. */
+  /** Test the commons project. */
   object test extends Tests with ScalaTest with ScoverageTests
 }
 
@@ -82,7 +82,7 @@ object pipelines extends CommonModule {
   /** Build a JAR file from the pipelines project. */
   def localJar = T { super.localJar(assembly(), jarName = "cvbio-pipelines.jar") }
 
-  /** Test the tools pipelines project. */
+  /** Test the pipelines project. */
   object test extends Tests with ScalaTest with ScoverageTests {
     override def moduleDeps: Seq[JavaModule] =  super.moduleDeps ++ Seq(commons.test)
   }
