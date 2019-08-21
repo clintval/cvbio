@@ -5,20 +5,24 @@ scala:
 jdk:
   - openjdk8
 before_install:
-  - source .env
+  - export MILL_VERSION=$(head -n1 .mill-version 2> /dev/null)
 install:
-  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/"${MILL_VERSION}"/"${MILL_VERSION}" && chmod +x ~/bin/mill
+  - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/"${MILL_VERSION}"/"${MILL_VERSION}"
+  - chmod +x ~/bin/mill
   - export PATH=~/bin/mill:$PATH
 before_script:
-  - travis_retry mill clean
-  - mill --disable-ticker -s _.scoverage.compile
+  - mill clean
+  - travis_retry mill --disable-ticker -s _.compile
 script:
-  - mill --disable-ticker -s _.test
-  - mill --disable-ticker -s _.scoverage.xmlReport
-  - mill --disable-ticker -s _.scoverage.htmlReport
-  - mill --disable-ticker -s _.localJar
+  - mill --disable-ticker -s commons.test
+  - mill --disable-ticker -s commons.scoverage.xmlReport
+  - mill --disable-ticker -s commons.scoverage.htmlReport
+  - mill --disable-ticker -s tools.test
+  - mill --disable-ticker -s tools.scoverage.xmlReport
+  - mill --disable-ticker -s tools.scoverage.htmlReport
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - travis_retry bash <(curl -s https://codecov.io/bash) -c -F commons -f '!*.txt'
+  - travis_retry bash <(curl -s https://codecov.io/bash) -c -F tools -f '!*.txt'
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
 cache:

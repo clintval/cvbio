@@ -8,7 +8,7 @@ import com.fulcrumgenomics.bam.Bams.sorter
 import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.SamOrder.Queryname
 import com.fulcrumgenomics.bam.api.{SamOrder, SamRecord, SamSource}
-import com.fulcrumgenomics.commons.collection.SelfClosingIterator
+import com.fulcrumgenomics.commons.collection.{BetterBufferedIterator, SelfClosingIterator}
 import com.fulcrumgenomics.commons.util.LazyLogging
 import com.fulcrumgenomics.util.ProgressLogger
 import enumeratum.EnumEntry
@@ -68,11 +68,11 @@ object Bams extends LazyLogging {
     val iterator: Iterator[Seq[Template]] = new Iterator[Seq[Template]] {
 
       /** The underlying template iterators. */
-      private val underlying = sources.map(sortedTemplateIterator(_))
+      private val iterators = sources.map(templateSortedIterator(_))
 
       /** Test all template iterators to see if they have another template to emit. */
       override def hasNext: Boolean = {
-        underlying
+        iterators
           .map(_.hasNext)
           .ensuring(_.distinct.length <= 1, "SAM sources do not have the same number of templates!")
           .contains(true)
@@ -81,14 +81,14 @@ object Bams extends LazyLogging {
       /** Advance to the next sequence of templates. */
       override def next(): Seq[Template] = {
         require(hasNext, "next() called on empty iterator")
-        underlying
-          .map(_.next)
-          .ensuring(templates =>
-            templates.map(_.name).distinct.length <= 1,
-            "Templates with different names found! This can only occur if your SAM sources are queryname sorted using"
-              + " different implementations, such as with Picard tools versus Samtools. If you have encountered this"
-              + " exception, then please alert the maintainer!"
-          )
+        val templates = iterators.map(_.next)
+        require(
+          templates.map(_.name).distinct.length <= 1,
+          "Templates with different names found! This can only occur if your SAM sources are queryname sorted using"
+            + " different implementations, such as with Picard tools versus Samtools. If you have encountered this"
+            + " exception, then please alert the maintainer!"
+        )
+        templates
       }
     }
 
@@ -99,17 +99,32 @@ object Bams extends LazyLogging {
     * iterator. Although a queryname sort is guaranteed, the sort order may not be consistent with other queryname
     * sorting implementations, especially in other tool kits.
     *
+    * @param in a SamReader from which to consume records
+    * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
+    * @param tmpDir a temp directory to use for temporary sorting files if sorting is needed
+    * @return an Iterator with reads from the same query grouped together
+    */
+  def querySortedIterator(
+    in: SamSource,
+    maxInMemory: Int = DefaultMaxRecordsInMemory,
+    tmpDir: DirPath  = DefaultSortingTempDirectory
+  ): BetterBufferedIterator[SamRecord] = querySortedIterator(in.iterator, in.header, maxInMemory, tmpDir)
+
+  /** Returns an iterator over records in such a way that all reads with the same query name are adjacent in the
+    * iterator. Although a queryname sort is guaranteed, the sort order may not be consistent with other queryname
+    * sorting implementations, especially in other tool kits.
+    *
     * @param iterator an iterator from which to consume records
     * @param header the header associated with the records
     * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
     * @param tmpDir a temp directory to use for temporary sorting files if sorting is needed
-    * @return an [[scala.Iterator]] with reads from the same query grouped together
+    * @return an Iterator with reads from the same query grouped together
     */
   def querySortedIterator(
     iterator: Iterator[SamRecord],
     header: SamFileHeader,
-    maxInMemory: Int = DefaultMaxRecordsInMemory,
-    tmpDir: DirPath  = DefaultSortingTempDirectory
+    maxInMemory: Int,
+    tmpDir: DirPath
   ): SelfClosingIterator[SamRecord] = {
     (SamOrder(header), iterator) match {
       case (Some(Queryname), _iterator: SelfClosingIterator[SamRecord]) => _iterator
@@ -135,11 +150,11 @@ object Bams extends LazyLogging {
     * @param tmpDir an optional temp directory to use for temporary sorting files if needed
     * @return an [[Iterator]] of query sorted [[Template]] objects
     */
-  def sortedTemplateIterator(
+  def templateSortedIterator(
     in: SamSource,
     maxInMemory: Int = DefaultMaxRecordsInMemory,
     tmpDir: DirPath  = DefaultSortingTempDirectory
-  ): SelfClosingIterator[Template] = sortedTemplateIterator(in.iterator, in.header, maxInMemory, tmpDir)
+  ): SelfClosingIterator[Template] = templateSortedIterator(in.iterator, in.header, maxInMemory, tmpDir)
 
   /** Return an iterator over records sorted and grouped into [[Template]] objects. Although a queryname sort is
     * guaranteed, the sort order may not be consistent with other queryname sorting implementations, especially in other
@@ -152,9 +167,9 @@ object Bams extends LazyLogging {
     * @param header the header associated with the records
     * @param maxInMemory the maximum number of records to keep and sort in memory, if sorting is needed
     * @param tmpDir a temp directory to use for temporary sorting files if sorting is needed
-    * @return an [[Iterator]] of query sorted [[Template]] objects
+    * @return an Iterator of queryname sorted Template objects
     */
-  def sortedTemplateIterator(
+  def templateSortedIterator(
     iterator: Iterator[SamRecord],
     header: SamFileHeader,
     maxInMemory: Int,
