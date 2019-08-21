@@ -17,13 +17,12 @@ script:
   - mill --disable-ticker -s commons.test
   - mill --disable-ticker -s commons.scoverage.xmlReport
   - mill --disable-ticker -s commons.scoverage.htmlReport
+  - travis_retry bash <(curl -s https://codecov.io/bash) -c -F commons -f '!*.txt'
   - mill --disable-ticker -s tools.test
   - mill --disable-ticker -s tools.scoverage.xmlReport
   - mill --disable-ticker -s tools.scoverage.htmlReport
-  - mill --disable-ticker -s pipelines.test
-after_success:
-  - travis_retry bash <(curl -s https://codecov.io/bash) -c -F commons -f '!*.txt'
   - travis_retry bash <(curl -s https://codecov.io/bash) -c -F tools -f '!*.txt'
+  - mill --disable-ticker -s pipelines.test
 before_cache:
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
 cache:
