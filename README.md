@@ -24,20 +24,14 @@ Artisanal 🤣 bioinformatics Scala tools and pipelines.
 
 ## Development Workflow
 
-First install [Mill][mill-link] and optionally create [IntelliJ][intellij-link] configuration files.
+This project uses the excellent build tool [Mill][mill-link].
+A bootstrap script is provided so compiling this project is easy!
 
-[intellij-link]: https://www.jetbrains.com/idea/download/#section=mac
-[mill-link]:     https://github.com/lihaoyi/mill
-
-```bash
-❯ brew install mill
-❯ mill mill.scalalib.GenIdea/idea
-```
-
-Then, assembly portable JARs with:
+Assemble portable JARs with:
 
 ```bash
-❯ mill _.localJar
+❯ cd cvbio
+❯ ./mill _.localJar
 ```
 
 If the above was successful, then you will find two JARs at `jars/`:
@@ -47,6 +41,8 @@ If the above was successful, then you will find two JARs at `jars/`:
 cvbio-pipelines.jar
 cvbio.jar
 ```
+
+[mill-link]: https://github.com/lihaoyi/mill
 
 ## Documentation
 
