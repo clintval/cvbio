@@ -1,10 +1,14 @@
 package com.cvbio.tools.disambiguate
 
+import com.cvbio.commons.io.Io
+import com.cvbio.commons.CommonsDef._
 import com.cvbio.testing.{TemplateBuilder, UnitSpec}
 import com.cvbio.tools.disambiguate.DisambiguationStrategy.Classic
 import com.fulcrumgenomics.bam.Template
 import com.fulcrumgenomics.bam.api.SamOrder
+import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.testing.SamBuilder
+import htsjdk.samtools.SAMSequenceRecord
 import htsjdk.samtools.SAMTag.{AS, NM}
 
 class DisambiguateTest extends UnitSpec {
@@ -94,5 +98,21 @@ class DisambiguateTest extends UnitSpec {
     val templates = Seq(pair1, pair2, pair3).map(pair => Template(pair.toIterator))
 
     Classic.choose(templates).value.name shouldBe "pair3"
+  }
+
+  "Disambiguate" should "run end-to-end" in {
+    val assembly: String = "hg9000"
+    val dir: DirPath     = Io.makeTempDir("disambiguate")
+
+    val builder = new SamBuilder(sort = Some(SamOrder.Queryname))
+    val pair1   = builder.addPair(name = "pair1", attrs = Map(NM.toString -> 6), start1 = 2, start2 = 101)
+    val pair2   = builder.addPair(name = "pair2", attrs = Map(NM.toString -> 6), start1 = 2, start2 = 101)
+    val pair3   = builder.addPair(name = "pair3", attrs = Map(NM.toString -> 6), start1 = 2, start2 = 101)
+    builder.header.getSequenceDictionary.getSequences.forEach { seq: SAMSequenceRecord  => seq.setAssembly(assembly) }
+
+    val input = builder.toTempFile(deleteOnExit = true)
+
+    val disambiguate = new Disambiguate(input = Seq(input), prefix = PathUtil.pathTo(dir.toString, more = "insilico"))
+    disambiguate.execute()
   }
 }
