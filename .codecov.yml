@@ -19,5 +19,6 @@ comment:
   require_head: yes
 
 ignore:
-  - "docs"
-  - "pipelines"
+  - "docs/**/*"
+  - "pipelines/**/*"
+  - "tools/src/com/cvbio/tools/ensembl"
