@@ -1,10 +1,10 @@
 # cvbio
 
 [![Build Status][travis-badge]][travis-link]
+[![Releases][releases-badge]][releases-link]
 [![Code Coverage][codecov-badge]][codecov-link]
 [![Language][scala-badge]][scala-link]
 [![Code Style][scalafmt-badge]][scalafmt-link]
-[![Releases][releases-badge]][releases-link]
 [![License][license-badge]][license-link]
 
 [codecov-badge]:  https://codecov.io/gh/clintval/cvbio/branch/master/graph/badge.svg
@@ -20,30 +20,119 @@
 [travis-badge]:   https://travis-ci.org/clintval/cvbio.svg?branch=master
 [travis-link]:    https://travis-ci.org/clintval/cvbio
 
-Artisanal 🤣 bioinformatics Scala tools and pipelines.
+Artisanal 🤣 bioinformatics tools and pipelines in Scala.
 
-## Development Workflow
+---
 
-This project uses the excellent build tool [Mill][mill-link].
-A bootstrap script is provided so compiling this project is easy!
+### Disambiguate
 
-Assemble portable JARs with:
+#### Features
 
-```bash
-❯ cd cvbio
-❯ ./mill _.localJar
+- Accepts SAM/BAM sources of any sort order
+- Will disambiguate an arbitrary number of BAMs, all aligned to different references
+- Writes the ambiguous alignments to an ambiguous-alignment specific directory
+- Extensible implementation which supports alternative disambiguation strategies
+- Early benchmarks show extremely high accuracy: [Click Here](https://github.com/clintval/cvbio/blob/master/docs/benchmarks/disambiguate.md)
+
+#### Command Line Usage
+
+```
+❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
-If the above was successful, then you will find two JARs at `jars/`:
+#### Long Tool Description
 
 ```
+Disambiguate
+------------------------------------------------------------------------------------------------------------------------
+Disambiguate reads that were mapped to multiple references.
+
+Disambiguation of aligned reads is performed per-template and all information across primary, secondary, and
+supplementary alignments is used as evidence. Alignment disambiguation is commonly used when analyzing sequencing data
+from transduction, transfection, transgenic, or xenographic (including patient derived xenograft) experiments. This
+tool works by comparing various alignment scores between a template that has been aligned to many references in order
+to determine which reference is the most likely source.
+
+All templates which are positively assigned to a single source reference are written to a reference-specific output BAM
+file. Any templates with ambiguous reference assignment are written to an ambiguous input-specific output BAM file.
+Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
+
+Input BAMs of arbitrary sort order are accepted, however, an internal sort to queryname will be performed unless the
+BAM is already in queryname sort order. All output BAM files will be written in the same sort order as the input BAM
+files. Although paired-end reads will give the most discriminatory power for disambiguation of short- read sequencing
+data, this tool accepts paired, single-end (fragment), and mixed pairing input data.
+
+Example
+-------
+
+To disambiguate templates that are aligned to human (A) and mouse (B):
+
+  ❯ java -jar cvbio.jar Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
+
+  ❯ tree sample/
+    sample/
+    ├── ambiguous-alignments/
+    │  ├── sample.A.ambiguous.bai
+    │  ├── sample.A.ambiguous.bam
+    │  ├── sample.B.ambiguous.bai
+    │  └── sample.B.ambiguous.bam
+    ├── sample.hg38.bai
+    ├── sample.hg38.bam
+    ├── sample.mm10.bai
+    └── sample.mm10.bam
+
+Glossary
+--------
+
+  * MAPQ: A metric that tells you how confident you can be that a read comes from a reported mapping position.
+  * AS: A metric that tells you how similar the read is to the reference sequence.
+  * NM: A metric that measures the number of mismatches to the reference sequence (Hamming distance).
+
+Prior Art
+---------
+
+  * Disambiguate (https://github.com/AstraZeneca-NGS/disambiguate) from AstraZeneca's NGS team
+```
+
+---
+
+## Building this Project
+
+Assemble a portable JAR with the provided bootstrap script. Easy!
+
+```console
+❯ ./mill tools.localJar
 ❯ ls -1 jars
-cvbio-pipelines.jar
 cvbio.jar
 ```
 
-[mill-link]: https://github.com/lihaoyi/mill
+## Using this Project
 
-## Documentation
+```console
+❯ java -jar jars/cvbio.jar -h
+USAGE: cvbio [cvbio arguments] [command name] [command arguments]
+Version: 1.1.0
+------------------------------------------------------------------------------------------------------------------------
 
-[Disambiguation Benchmarks](https://github.com/clintval/cvbio/blob/master/docs/benchmarks/disambiguate.md)
+cvbio Arguments:
+------------------------------------------------------------------------------------------------------------------------
+-h [[true|false]], --help[[=true|false]]
+                              Display the help message. [Default: false]. 
+--async-io[[=true|false]]     Use asynchronous I/O where possible, e.g. for SAM and BAM files. [Default:
+                              false]. 
+--version[[=true|false]]      Display the version number for this tool. [Default: false]. 
+--compression=Int             Default GZIP compression level, BAM compression level. [Default: 5]. 
+--tmp-dir=DirPath             Directory to use for temporary files. [Default:
+                              /var/folders/0m/dkk9n32j7qd6xrmf1bhk28wr0000gp/T]. 
+--log-level=LogLevel          Minimum severity log-level to emit. [Default: Info]. Options: Debug, Info,
+                              Warning, Error, Fatal.
+
+Available Sub-Commands:
+------------------------------------------------------------------------------------------------------------------------
+Ensembl:                              Tools for downloading and formatting Ensembl data.                                
+    FetchEnsemblGtf                    Fetch a GTF file from the Ensembl web server.
+------------------------------------------------------------------------------------------------------------------------
+SAM/BAM:                              Tools for manipulating SAM, BAM, and related data.                                
+    Disambiguate                       Disambiguate reads that were mapped to multiple references.
+------------------------------------------------------------------------------------------------------------------------
+```

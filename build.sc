@@ -1,11 +1,15 @@
+import java.util.jar.Attributes.Name.{IMPLEMENTATION_VERSION => ImplementationVersion}
+
 import mill.contrib.scoverage.ScoverageModule
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
 import mill.api.Loose
-import mill.define.Target
+import mill.define.{Input, Target}
 import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
+
+import scala.util.{Try, Success, Failure}
 
 private val cvbioVersion        = "0.0.5"
 private val dagrCoreVersion     = "0.6.0-46843f8-SNAPSHOT"
@@ -14,8 +18,52 @@ private val fgbioVersion        = "0.9.0-f2cfac4-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
+/** A base trait for versioning modules. */
+trait ReleaseModule extends JavaModule {
+
+  /** Execute Git arguments and return the standard output. */
+  private def git(args: String*): String = %%("git", args)(pwd).out.string.trim
+
+  /** Get the commit hash at the HEAD of this branch. */
+  private def gitHead: String = git("rev-parse", "HEAD")
+
+  /** Get the commit shorthash at the HEAD of this branch .*/
+  private def shortHash: String = gitHead.take(7)
+
+  /** The current tag of the currently checked out commit, if any. */
+  private def currentTag: Try[String] = Try(git("describe", "--exact-match", "--tags", "--always", gitHead))
+
+  /** The hash of the last tagged commit. */
+  private def hashOfLastTag: Try[String] = Try(git("rev-list", "--tags", "--max-count=1"))
+
+  /** The last tag of the currently checked out branch, if any. */
+  private def lastTag: Try[String] = hashOfLastTag match {
+    case Success(hash) => Try(git("describe", "--abbrev=0", "--tags", "--always", hash))
+    case Failure(e)    => Failure(e)
+  }
+
+  /** If the Git repository is left in a dirty state. */
+  private def dirty: Boolean = git("status", "--porcelain").nonEmpty
+
+  /** The implementation version. */
+  private def implementationVersion: Input[String] = T.input {
+    val prefix: String = (currentTag, lastTag) match {
+      case (Success(_currentTag), _)       => _currentTag
+      case (Failure(_), Success(_lastTag)) => _lastTag + "-" + shortHash
+      case (_, _)                          => shortHash
+    }
+    prefix + (if (dirty) "-dirty" else "")
+  }
+
+  /** The version string `Target`. */
+  def version = T { println(implementationVersion()) }
+
+  /** The JAR manifest. */
+  override def manifest = T { super.manifest().add(ImplementationVersion.toString -> implementationVersion()) }
+}
+
 /** The common module mixin for all of our projects. */
-trait CommonModule extends ScalaModule with ScoverageModule {
+trait CommonModule extends ScalaModule with ReleaseModule with ScoverageModule {
   def scalaVersion     = "2.12.2"
   def scoverageVersion = "1.3.1"
 
