@@ -101,15 +101,15 @@ Prior Art
 Assemble a portable JAR with the provided bootstrap script. Easy!
 
 ```console
-❯ ./mill tools.localJar
-❯ ls -1 jars
+$ ./mill tools.localJar
+$ ls -1 jars
 cvbio.jar
 ```
 
 ## Using this Project
 
 ```console
-❯ java -jar jars/cvbio.jar -h
+$ java -jar jars/cvbio.jar -h
 USAGE: cvbio [cvbio arguments] [command name] [command arguments]
 Version: 1.1.0
 ------------------------------------------------------------------------------------------------------------------------
