@@ -135,7 +135,7 @@ class BamsTest extends UnitSpec {
     builder.addFrag(name="q2", start=200)
 
     val actual = Bams.querySortedIterator(builder.iterator, builder.header, maxInMemory = 10, DefaultSortingTempDirectory)
-    actual.map(_.name) shouldBe Seq("p1", "p1", "q1", "q2")
+    actual.map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
   }
 
   "Bams.sortedTemplateIterator" should "return template objects in order" in {
