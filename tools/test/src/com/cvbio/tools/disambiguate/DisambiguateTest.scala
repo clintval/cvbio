@@ -10,7 +10,6 @@ import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.testing.SamBuilder
 import htsjdk.samtools.SAMSequenceRecord
 import htsjdk.samtools.SAMTag.{AS, NM}
-import com.cvbio.tools.disambiguate.Disambiguate.AmbiguousOutputDirName
 
 class DisambiguateTest extends UnitSpec {
 
