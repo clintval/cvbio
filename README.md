@@ -36,13 +36,13 @@ Artisanal 🤣 bioinformatics tools and pipelines in Scala.
 
 #### Command Line Usage
 
-```
-❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
+```console
+$ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
 #### Long Tool Description
 
-```
+```text
 Disambiguate
 ------------------------------------------------------------------------------------------------------------------------
 Disambiguate reads that were mapped to multiple references.
