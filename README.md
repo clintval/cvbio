@@ -1,12 +1,16 @@
 # cvbio
 
+[![install with bioconda][bioconda-badge]][bioconda-link]
 [![Build Status][travis-badge]][travis-link]
-[![Releases][releases-badge]][releases-link]
 [![Code Coverage][codecov-badge]][codecov-link]
 [![Language][scala-badge]][scala-link]
 [![Code Style][scalafmt-badge]][scalafmt-link]
+[![Releases][releases-badge]][releases-link]
 [![License][license-badge]][license-link]
 
+
+[bioconda-badge]: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg
+[bioconda-link]:  http://bioconda.github.io/recipes/cvbio/README.html
 [codecov-badge]:  https://codecov.io/gh/clintval/cvbio/branch/master/graph/badge.svg
 [codecov-link]:   https://codecov.io/gh/clintval/cvbio
 [license-badge]:  https://img.shields.io/badge/license-MIT-blue.svg
@@ -21,6 +25,12 @@
 [travis-link]:    https://travis-ci.org/clintval/cvbio
 
 Artisanal 🤣 bioinformatics tools and pipelines in Scala.
+
+Install with the Conda package manager after setting up your [Bioconda channels](https://bioconda.github.io/user/install.html#set-up-channels):
+
+```console
+$❯ conda install cvbio
+```
 
 ---
 
@@ -37,7 +47,7 @@ Artisanal 🤣 bioinformatics tools and pipelines in Scala.
 #### Command Line Usage
 
 ```console
-$ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
+$❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
 #### Long Tool Description
@@ -101,15 +111,15 @@ Prior Art
 Assemble a portable JAR with the provided bootstrap script. Easy!
 
 ```console
-$ ./mill tools.localJar
-$ ls -1 jars
+$❯ ./mill tools.localJar
+$❯ ls -1 jars
 cvbio.jar
 ```
 
 ## Using this Project
 
 ```console
-$ java -jar jars/cvbio.jar -h
+$❯ java -jar jars/cvbio.jar -h
 USAGE: cvbio [cvbio arguments] [command name] [command arguments]
 Version: 1.1.0
 ------------------------------------------------------------------------------------------------------------------------
@@ -117,22 +127,22 @@ Version: 1.1.0
 cvbio Arguments:
 ------------------------------------------------------------------------------------------------------------------------
 -h [[true|false]], --help[[=true|false]]
-                              Display the help message. [Default: false]. 
+                              Display the help message. [Default: false].
 --async-io[[=true|false]]     Use asynchronous I/O where possible, e.g. for SAM and BAM files. [Default:
-                              false]. 
---version[[=true|false]]      Display the version number for this tool. [Default: false]. 
---compression=Int             Default GZIP compression level, BAM compression level. [Default: 5]. 
+                              false].
+--version[[=true|false]]      Display the version number for this tool. [Default: false].
+--compression=Int             Default GZIP compression level, BAM compression level. [Default: 5].
 --tmp-dir=DirPath             Directory to use for temporary files. [Default:
-                              /var/folders/0m/dkk9n32j7qd6xrmf1bhk28wr0000gp/T]. 
+                              /var/folders/0m/dkk9n32j7qd6xrmf1bhk28wr0000gp/T].
 --log-level=LogLevel          Minimum severity log-level to emit. [Default: Info]. Options: Debug, Info,
                               Warning, Error, Fatal.
 
 Available Sub-Commands:
 ------------------------------------------------------------------------------------------------------------------------
-Ensembl:                              Tools for downloading and formatting Ensembl data.                                
+Ensembl:                              Tools for downloading and formatting Ensembl data.
     FetchEnsemblGtf                    Fetch a GTF file from the Ensembl web server.
 ------------------------------------------------------------------------------------------------------------------------
-SAM/BAM:                              Tools for manipulating SAM, BAM, and related data.                                
+SAM/BAM:                              Tools for manipulating SAM, BAM, and related data.
     Disambiguate                       Disambiguate reads that were mapped to multiple references.
 ------------------------------------------------------------------------------------------------------------------------
 ```
