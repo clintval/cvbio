@@ -28,8 +28,8 @@ Artisanal 🤣 bioinformatics tools and pipelines in Scala.
 
 Install with the Conda package manager after setting up your [Bioconda channels](https://bioconda.github.io/user/install.html#set-up-channels):
 
-```console
-$❯ conda install cvbio
+```text
+❯ conda install cvbio
 ```
 
 ---
@@ -47,7 +47,7 @@ $❯ conda install cvbio
 #### Command Line Usage
 
 ```console
-$❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
+❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
 #### Long Tool Description
@@ -110,16 +110,16 @@ Prior Art
 
 Assemble a portable JAR with the provided bootstrap script. Easy!
 
-```console
-$❯ ./mill tools.localJar
-$❯ ls -1 jars
+```text
+❯ ./mill tools.localJar
+❯ ls -1 jars
 cvbio.jar
 ```
 
 ## Using this Project
 
-```console
-$❯ java -jar jars/cvbio.jar -h
+```text
+❯ java -jar jars/cvbio.jar -h
 USAGE: cvbio [cvbio arguments] [command name] [command arguments]
 Version: 1.1.0
 ------------------------------------------------------------------------------------------------------------------------
