@@ -8,6 +8,7 @@ object CvBioMain {
   def main(args: Array[String]): Unit = new CvBioMain().makeItSoAndExit(args)
 }
 
+/** An instance of `cvbio`. */
 class CvBioMain extends FgBioMain {
 
   /** The application name. */

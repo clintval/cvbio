@@ -21,3 +21,4 @@ comment:
 ignore:
   - "docs/**/*"
   - "pipelines/**/*"
+  - "tools/src/com/cvbio/tools/ensembl"
