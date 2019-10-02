@@ -19,5 +19,5 @@ comment:
   require_head: yes
 
 ignore:
-  - "docs"
-  - "pipelines"
+  - "docs/**/*"
+  - "pipelines/**/*"
