@@ -1,4 +1,5 @@
 package com.cvbio.tools.cmdline
+
 import com.cvbio.testing.UnitSpec
 import com.fulcrumgenomics.sopt.{arg, clp}
 
@@ -19,6 +20,5 @@ class CvBioMainTest extends UnitSpec {
   "CvBioMain" should "execute and issue a help message" in {
     new CvBioMain().makeItSo("TestClp".split(' ')) shouldBe 10
     new CvBioMain().makeItSo("TestClp -r 8".split(' ')) shouldBe 8
-
   }
 }
