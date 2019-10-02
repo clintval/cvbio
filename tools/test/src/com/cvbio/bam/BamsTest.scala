@@ -128,6 +128,16 @@ class BamsTest extends UnitSpec {
     Bams.querySortedIterator(in=builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
   }
 
+  it should "accept a generic iterator as input" in {
+    val builder = new SamBuilder(sort=None)
+    builder.addFrag(name="q1", start=100)
+    builder.addPair(name="p1", start1=100, start2=300)
+    builder.addFrag(name="q2", start=200)
+
+    val actual = Bams.querySortedIterator(builder.iterator, builder.header, maxInMemory = 10, DefaultSortingTempDirectory)
+    actual.map(_.name) shouldBe Seq("p1", "p1", "q1", "q2")
+  }
+
   "Bams.sortedTemplateIterator" should "return template objects in order" in {
     val builder = new SamBuilder(sort=Some(SamOrder.Coordinate))
     builder.addPair(name="p1", start1=100, start2=300)
