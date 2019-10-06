@@ -47,7 +47,7 @@ Install with the Conda package manager after setting up your [Bioconda channels]
 #### Command Line Usage
 
 ```console
-❯ java -jar cvbio.jar Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
+❯ cvbio Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
 #### Long Tool Description
@@ -102,47 +102,4 @@ Prior Art
 ---------
 
   * Disambiguate (https://github.com/AstraZeneca-NGS/disambiguate) from AstraZeneca's NGS team
-```
-
----
-
-## Building this Project
-
-Assemble a portable JAR with the provided bootstrap script. Easy!
-
-```text
-❯ ./mill tools.localJar
-❯ ls -1 jars
-cvbio.jar
-```
-
-## Using this Project
-
-```text
-❯ java -jar jars/cvbio.jar -h
-USAGE: cvbio [cvbio arguments] [command name] [command arguments]
-Version: 1.1.0
-------------------------------------------------------------------------------------------------------------------------
-
-cvbio Arguments:
-------------------------------------------------------------------------------------------------------------------------
--h [[true|false]], --help[[=true|false]]
-                              Display the help message. [Default: false].
---async-io[[=true|false]]     Use asynchronous I/O where possible, e.g. for SAM and BAM files. [Default:
-                              false].
---version[[=true|false]]      Display the version number for this tool. [Default: false].
---compression=Int             Default GZIP compression level, BAM compression level. [Default: 5].
---tmp-dir=DirPath             Directory to use for temporary files. [Default:
-                              /var/folders/0m/dkk9n32j7qd6xrmf1bhk28wr0000gp/T].
---log-level=LogLevel          Minimum severity log-level to emit. [Default: Info]. Options: Debug, Info,
-                              Warning, Error, Fatal.
-
-Available Sub-Commands:
-------------------------------------------------------------------------------------------------------------------------
-Ensembl:                              Tools for downloading and formatting Ensembl data.
-    FetchEnsemblGtf                    Fetch a GTF file from the Ensembl web server.
-------------------------------------------------------------------------------------------------------------------------
-SAM/BAM:                              Tools for manipulating SAM, BAM, and related data.
-    Disambiguate                       Disambiguate reads that were mapped to multiple references.
-------------------------------------------------------------------------------------------------------------------------
 ```
