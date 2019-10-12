@@ -95,7 +95,7 @@ object commons extends CommonModule {
   override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation", "-feature")
 
   /** Exclude these resource paths when building subsequent JARs with the commons project. */
-  override def assemblyRules = Seq(
+  override def assemblyRules: Seq[ExcludePattern] = Seq(
     ExcludePattern(".*\\.git.*"),
     ExcludePattern(".*chromosome-mappings/README.md")
   )
