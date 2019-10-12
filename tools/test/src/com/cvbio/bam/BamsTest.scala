@@ -41,7 +41,7 @@ class BamsTest extends UnitSpec {
     builder.addPair(name = "pair1", start1 = 1, start2 = 2)
     val iterator = Bams.templatesIterator(builder.toSource)
     iterator.hasNext shouldBe true
-    iterator.length  shouldBe 1
+    iterator.length shouldBe 1
   }
 
   it should "not require every SamSource to be queryname sorted" in {
@@ -51,7 +51,9 @@ class BamsTest extends UnitSpec {
     SamOrder.values.foreach { so =>
       val source1 = new SamBuilder(sort = Some(so)).toSource
       val source2 = new SamBuilder(sort = Some(so)).toSource
-      noException shouldBe thrownBy { Bams.templatesIterator(source1, source2) }
+      val log: LoggerString = captureLogger { () =>
+        noException shouldBe thrownBy { Bams.templatesIterator(source1, source2) }
+      }
     }
   }
 
@@ -97,7 +99,9 @@ class BamsTest extends UnitSpec {
     val expected = Seq("A1", "A10", "A12", "A2", "A7", "A88", "A9")
 
     actual.foreach(name => builder.addFrag(name, start=100))
-    Bams.querySortedIterator(in=builder.toSource).map(_.name).toSeq shouldBe expected
+    val log: LoggerString = captureLogger { () =>
+      Bams.querySortedIterator(in = builder.toSource).map(_.name).toSeq shouldBe expected
+    }
   }
 
   it should "sort a reader that is query grouped" in {
@@ -107,7 +111,9 @@ class BamsTest extends UnitSpec {
     builder.addPair(name="p1", start1=100, start2=300)
     builder.addFrag(name="q2", start=200)
 
-    Bams.querySortedIterator(in=builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    val log: LoggerString = captureLogger { () =>
+      Bams.querySortedIterator(in = builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    }
   }
 
   it should "sort a coordinate sorted input" in {
@@ -116,7 +122,9 @@ class BamsTest extends UnitSpec {
     builder.addPair(name="p1", start1=100, start2=300)
     builder.addFrag(name="q2", start=200)
 
-    Bams.querySortedIterator(in=builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    val log: LoggerString = captureLogger { () =>
+      Bams.querySortedIterator(in = builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    }
   }
 
   it should "sort an unsorted input" in {
@@ -125,7 +133,9 @@ class BamsTest extends UnitSpec {
     builder.addPair(name="p1", start1=100, start2=300)
     builder.addFrag(name="q2", start=200)
 
-    Bams.querySortedIterator(in=builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    val log: LoggerString = captureLogger { () =>
+      Bams.querySortedIterator(in = builder.toSource).map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    }
   }
 
   it should "accept a generic iterator as input" in {
@@ -134,30 +144,34 @@ class BamsTest extends UnitSpec {
     builder.addPair(name="p1", start1=100, start2=300)
     builder.addFrag(name="q2", start=200)
 
-    val actual = Bams.querySortedIterator(builder.iterator, builder.header, maxInMemory = 10, DefaultSortingTempDirectory)
-    actual.map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    val log: LoggerString = captureLogger { () =>
+      val actual = Bams.querySortedIterator(builder.iterator, builder.header, maxInMemory = 10, DefaultSortingTempDirectory)
+      actual.map(_.name).toSeq shouldBe Seq("p1", "p1", "q1", "q2")
+    }
   }
 
-  "Bams.sortedTemplateIterator" should "return template objects in order" in {
+  "Bams.templateSortedIterator" should "return template objects in order" in {
     val builder = new SamBuilder(sort=Some(SamOrder.Coordinate))
     builder.addPair(name="p1", start1=100, start2=300)
     builder.addFrag(name="f1", start=100)
     builder.addPair(name="p2", start1=500, start2=200)
     builder.addPair(name="p0", start1=700, start2=999)
 
-    val templates = Bams.templateSortedIterator(builder.toSource).toSeq
-    templates should have size 4
-    templates.map(_.name) shouldBe Seq("f1", "p0", "p1", "p2")
+    val log: LoggerString = captureLogger { () =>
+      val templates = Bams.templateSortedIterator(builder.toSource).toSeq
+      templates should have size 4
+      templates.map(_.name) shouldBe Seq("f1", "p0", "p1", "p2")
 
-    templates.foreach {t =>
-      (t.r1Supplementals ++ t.r1Secondaries ++ t.r2Supplementals ++ t.r2Secondaries).isEmpty shouldBe true
-      if (t.name startsWith "f") {
-        t.r1.exists(r => !r.paired) shouldBe true
-        t.r2.isEmpty shouldBe true
-      }
-      else {
-        t.r1.exists(r => r.firstOfPair) shouldBe true
-        t.r2.exists(r => r.secondOfPair) shouldBe true
+      templates.foreach { t =>
+        (t.r1Supplementals ++ t.r1Secondaries ++ t.r2Supplementals ++ t.r2Secondaries).isEmpty shouldBe true
+        if (t.name startsWith "f") {
+          t.r1.exists(r => !r.paired) shouldBe true
+          t.r2.isEmpty shouldBe true
+        }
+        else {
+          t.r1.exists(r => r.firstOfPair) shouldBe true
+          t.r2.exists(r => r.secondOfPair) shouldBe true
+        }
       }
     }
   }
@@ -166,13 +180,16 @@ class BamsTest extends UnitSpec {
     val builder1 = new SamBuilder(sort = Some(SamOrder.Unknown))
     builder1.addPair(name = "A9")
     builder1.addPair(name = "A88")
-    val iterator1 = Bams.templateSortedIterator(builder1.iterator, builder1.header, maxInMemory = 10, DefaultSortingTempDirectory)
-    iterator1.toList.map(_.name) should contain theSameElementsInOrderAs Seq("A88", "A9")
-
+    captureLogger { () =>
+      val iterator1 = Bams.templateSortedIterator(builder1.iterator, builder1.header, maxInMemory = 10, DefaultSortingTempDirectory)
+      iterator1.toList.map(_.name) should contain theSameElementsInOrderAs Seq("A88", "A9")
+    }
     val builder2 = new SamBuilder(sort = Some(SamOrder.Unknown))
     builder2.addPair(name = "A88")
     builder2.addPair(name = "A9")
-    val iterator2 = Bams.templateSortedIterator(builder2.iterator, builder2.header, maxInMemory = 10, DefaultSortingTempDirectory)
-    iterator2.toList.map(_.name) should contain theSameElementsInOrderAs Seq("A88", "A9")
+    captureLogger { () =>
+      val iterator2 = Bams.templateSortedIterator(builder2.iterator, builder2.header, maxInMemory = 10, DefaultSortingTempDirectory)
+      iterator2.toList.map(_.name) should contain theSameElementsInOrderAs Seq("A88", "A9")
+    }
   }
 }

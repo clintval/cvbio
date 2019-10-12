@@ -10,7 +10,7 @@ class TestClp(
   override def execute(): Unit = {
     exitCode match {
       case Some(code) => fail(code)
-      case None       => fail(1)
+      case None       => fail(exit = 1)
     }
   }
 }
@@ -18,7 +18,9 @@ class TestClp(
 class CvBioMainTest extends UnitSpec {
 
   "CvBioMain" should "execute and issue a help message" in {
-    new CvBioMain().makeItSo("TestClp".split(' ')) shouldBe 10
-    new CvBioMain().makeItSo("TestClp -r 8".split(' ')) shouldBe 8
+    val logs: LoggerString = captureLogger { () =>
+      new CvBioMain().makeItSo("TestClp".split(' ')) shouldBe 10
+      new CvBioMain().makeItSo("TestClp -r 8".split(' ')) shouldBe 8
+    }
   }
 }
