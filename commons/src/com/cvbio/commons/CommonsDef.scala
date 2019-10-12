@@ -2,29 +2,25 @@ package com.cvbio.commons
 
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.{CommonsDef => FgBioCommonsDef}
-import htsjdk.samtools.BAMIndex.{BAMIndexSuffix => baiFileExtension}
-import htsjdk.samtools.BamFileIoUtils.{BAM_FILE_EXTENSION => bamFileExtension}
-import htsjdk.samtools.cram.CRAIIndex.{CRAI_INDEX_SUFFIX => craiFileExtension}
-import htsjdk.samtools.cram.build.CramIO.{CRAM_FILE_EXTENSION => cramFileExtension}
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
-import htsjdk.samtools.util.IOUtil.{SAM_FILE_EXTENSION => samFileExtension}
+import htsjdk.samtools.util.FileExtensions
 
 object CommonsDef extends FgBioCommonsDef {
 
   /** The extension of BAM index files. */
-  val BaiExtension: FilenameSuffix = baiFileExtension
+  val BaiExtension: FilenameSuffix = FileExtensions.BAI_INDEX
 
   /** The extension of BAM files. */
-  val BamExtension: FilenameSuffix = bamFileExtension
+  val BamExtension: FilenameSuffix = FileExtensions.BAM
 
   /** The extension of CRAM index files. */
-  val CraiExtension: FilenameSuffix = craiFileExtension
+  val CraiExtension: FilenameSuffix = FileExtensions.CRAM_INDEX
 
   /** The extension of CRAM files. */
-  val CramExtension: FilenameSuffix = cramFileExtension
+  val CramExtension: FilenameSuffix = FileExtensions.CRAM
 
   /** The extension of SAM files. */
-  val SamExtension: FilenameSuffix = samFileExtension
+  val SamExtension: FilenameSuffix = FileExtensions.SAM
 
   /** The long version of the FASTQ file extension. */
   val FastqExtension: FilenameSuffix = fastq.getExtension
@@ -53,10 +49,10 @@ object CommonsDef extends FgBioCommonsDef {
   def bamBai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, BamExtension + BaiExtension)
 
   /** Return the path to a BAM index file of the form `<filename>.crai` */
-  def crai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, craiFileExtension)
+  def crai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, CraiExtension)
 
   /** Return the path to a BAM index file of the form `<filename>.cram.crai` */
-  def cramCrai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, cramFileExtension + craiFileExtension)
+  def cramCrai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, CramExtension + CraiExtension)
 
   /** A String that represents a filename. */
   type Filename = String
