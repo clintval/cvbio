@@ -12,9 +12,9 @@ import mill.scalalib._
 import scala.util.{Try, Success, Failure}
 
 private val cvbioVersion        = "0.0.5"
-private val dagrCoreVersion     = "0.6.0-46843f8-SNAPSHOT"
-private val fgbioCommonsVersion = "0.8.0-3087de3-SNAPSHOT"
-private val fgbioVersion        = "0.9.0-f2cfac4-SNAPSHOT"
+private val dagrCoreVersion     = "1.1.0-a0a77fb-SNAPSHOT"
+private val fgbioCommonsVersion = "1.1.0-f1f68f5-SNAPSHOT"
+private val fgbioVersion        = "1.1.0-2100905-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
@@ -70,7 +70,8 @@ trait CommonModule extends ScalaModule with ReleaseModule with ScoverageModule {
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/public"),
     MavenRepository("https://oss.sonatype.org/content/repositories/snapshots"),
-    MavenRepository("https://jcenter.bintray.com/")
+    MavenRepository("https://jcenter.bintray.com/"),
+    MavenRepository("https://artifactory.broadinstitute.org/artifactory/libs-snapshot/")
   )
 
   def localJar(assembly: PathRef, jarName: String): Unit = {
