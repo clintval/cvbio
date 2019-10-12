@@ -11,7 +11,6 @@ import mill.scalalib._
 
 import scala.util.{Try, Success, Failure}
 
-private val cvbioVersion        = "0.0.5"
 private val dagrCoreVersion     = "1.1.0-a0a77fb-SNAPSHOT"
 private val fgbioCommonsVersion = "1.1.0-f1f68f5-SNAPSHOT"
 private val fgbioVersion        = "1.1.0-2100905-SNAPSHOT"
@@ -94,8 +93,6 @@ object commons extends CommonModule {
 
   /** Scala compiler options. */
   override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation", "-feature")
-
-  // def manifest = T { super.manifest().add(ImplementationVersion.toString -> s"cvbioVersion-$gitHash-SNAPSHOT") }
 
   /** Exclude these resource paths when building subsequent JARs with the commons project. */
   override def assemblyRules = Seq(
