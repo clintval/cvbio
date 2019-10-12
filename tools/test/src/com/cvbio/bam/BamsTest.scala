@@ -1,6 +1,6 @@
 package com.cvbio.bam
 
-import com.cvbio.bam.Bams._
+import com.cvbio.bam.Bams.DefaultSortingTempDirectory
 import com.cvbio.bam.Bams.ReadOrdinal.{All, Read1, Read2}
 import com.cvbio.testing.{TemplateBuilder, UnitSpec}
 import com.fulcrumgenomics.bam.api.{SamOrder, SamSource}

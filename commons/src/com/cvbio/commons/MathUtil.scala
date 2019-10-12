@@ -1,8 +1,10 @@
 package com.cvbio.commons
 
-import scala.math.Ordering
+import eu.timepit.refined.W
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.numeric.Interval
 
-import scala.math.Ordering.Implicits._
+import scala.math.Ordering
 
 /** Common math utilities. */
 object MathUtil {
@@ -62,4 +64,7 @@ object MathUtil {
   def pickMin[T](coll: Seq[T])(implicit cmp: Ordering[T]): Option[T] = {
     if (coll.count(cmp.equiv(_, coll.min)) != 1) None else Some(coll.min)
   }
+
+  /** A ratio, represented as a decimal, after dividing one value by the total. */
+  type Ratio = Double Refined Interval.Open[W.`0.0`.T, W.`1.0`.T]
 }
