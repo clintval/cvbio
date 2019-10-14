@@ -4,7 +4,7 @@ import java.io.{BufferedReader, Closeable, InputStreamReader, PrintWriter}
 import java.net.Socket
 
 import com.cvbio.commons.CommonsDef._
-import com.fulcrumgenomics.commons.util.LazyLogging
+import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LazyLogging}
 import htsjdk.samtools.util.CloserUtil
 
 import scala.util.Try
@@ -15,8 +15,17 @@ object IgvController {
   type IgvResponse = String
 }
 
-/** A class to control an IGV application. */
-class IgvController(host: String, port: Int) extends LazyLogging with Closeable {
+/** A class to control an IGV application.
+  *
+  * {{{
+  *   scala> val igv = new IgvController("127.0.0.1", 60151)
+  *   scala> igv.available
+  *   true
+  *   scala> igv.close(andKill = true)
+  *   [2019/10/13 22:53:39 | IgvController | Info] Executing: exit
+  * }}}
+  */
+class IgvController(host: String, port: Int) extends LazyLogging with CaptureSystemStreams with Closeable {
   import IgvController._
 
   /** The socket connection to the IGV server. */
@@ -29,15 +38,19 @@ class IgvController(host: String, port: Int) extends LazyLogging with Closeable 
   private val out = new PrintWriter(this.socket.getOutputStream, true)
 
   /** Whether IGV is available or not. */
-  def available: Boolean = Try(exec("echo")).toOption.flatten.contains("echo")
+  def available: Boolean = {
+    var available: Boolean = false
+    captureLogger { () => available = Try(exec(Echo)).toOption.flatten.contains(Echo.toString) }
+    available
+  }
 
   /** Execute a sequence of arguments against the current IGV server. */
   private def exec(args: String*): Option[IgvResponse] = {
     val command = args.map(_.trim).mkString(" ")
-    logger.debug(s"Executing: $command")
+    logger.info(s"Executing: $command")
     this.out.println(command)
     val response: Option[IgvResponse] = Option(this.in.readLine())
-    response.foreach(r => logger.debug(s"Response: $r")) // Not all commands respond
+    response.foreach(r => logger.info(s"Response: $r")) // Not all commands respond
     response
   }
 

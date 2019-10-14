@@ -2,7 +2,6 @@ package com.cvbio.tools.igv
 
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.sopt._
 import htsjdk.samtools.util.Interval
 
@@ -18,21 +17,40 @@ import htsjdk.samtools.util.Interval
     """,
   group  = ClpGroups.Igv
 ) class IgvSnapshot(
-  @arg(flag = 'i', doc = "Input BAM.") val input: PathToBam = PathUtil.pathTo("/Users/cvalentine/Downloads/one-read-pair.sorted.bam"),
-  @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = "127.0.0.1",
-  @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = 60151
+  @arg(flag = 'i', doc = "Input files to display.", minElements = 1) val input: Seq[FilePath],
+  @arg(flag = 'o', doc = "Output path to a rendered image (.png, .jpg, or .svg).") val output: Option[FilePath] = None,
+  @arg(flag = 'l', doc = "The intervals to take snapshots over.") val intervals: Option[PathToIntervals] = None,
+  @arg(flag = 'c', doc = "The contig to \"goto\".", mutex = Array("intervals")) val contig: Option[String] = None,
+  @arg(flag = 's', doc = "The start position to \"goto\".", mutex = Array("intervals")) val start: Option[Int] = None,
+  @arg(flag = 'e', doc = "The end position to \"goto\".", mutex = Array("intervals")) val end: Option[Int] = None,
+  @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = Igv.DefaultHost,
+  @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = Igv.DefaultPort,
 ) extends CvBioTool {
 
-  override def execute(): Unit = {
-    val igv      = new IgvController(host, port)
-    val interval = new Interval("chr21", 6495564, 6496373)
+  /** Valid output suffixes for snapshot file paths. */
+  private val OutputSuffixes: Seq[FilenameSuffix] = Seq(".png", ".jpg", ".svg")
 
-    igv.exec(New)
-    igv.exec(Echo)
-    igv.exec(Load(input))
-    igv.exec(Goto(interval))
-    igv.exec(Region(interval))
-    igv.exec(Snapshot(PathUtil.pathTo("/Users/cvalentine/Desktop/help-me.svg")))
-    igv.close()
+  output.foreach { path =>
+    validate(
+      OutputSuffixes.exists(path.toString.endsWith),
+      message = s"Output must have one of ${OutputSuffixes.mkString(", ")} file extensions. Found: $path")
+  }
+
+  override def execute(): Unit = {
+    val igv  = new Igv(host, port)
+    val play = IgvPlay()
+
+    play.add(New).add(Load(input))
+
+    (contig, start, end, intervals) match {
+      case (Some(_contig), Some(_start), Some(_end), None) => {
+        play.add(Goto(new Interval(_contig, _start, _end)))
+      }
+      case (_, _, _, _) => Unit
+    }
+
+    output.foreach(path => play.add(Snapshot(path)))
+
+    igv.runPlay(play)
   }
 }

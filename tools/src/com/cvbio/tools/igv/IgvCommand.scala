@@ -4,8 +4,6 @@ import com.cvbio.commons.CommonsDef.{DirPath, FilePath}
 import com.cvbio.commons.StringUtil
 import htsjdk.samtools.util.Interval
 
-import scala.language.implicitConversions
-
 // TODO: Clean up entire file! Whatta mess.
 sealed trait IgvCommand {
   def params: Seq[Any] = Seq.empty
@@ -27,7 +25,7 @@ case class Collapse(trackName: Option[String]) extends IgvCommand {
 }
 case class Expand(trackName: String) extends IgvCommand { override val params: Seq[Any] = Seq(trackName) }
 case class Genome(genomeIdOrPath: String) extends IgvCommand { override val params: Seq[Any] = Seq(genomeIdOrPath) }
-case class Goto(locus: Seq[Locus]) extends IgvCommand {
+case class Goto(locus: Seq[Locus]) extends IgvCommand { // TODO: Wrong base type in constructor...
   override val params: Seq[Any] = Seq(locus)
   override def toString: String = {
     (Seq(simpleName) ++ locus.map(_.toString)).mkString(" ")
@@ -39,7 +37,11 @@ object Goto {
 }
 
 /** Loads data or session files. Specify a comma-delimited list of full paths or URLs. */
-case class Load(file: FilePath) extends IgvCommand { override val params: Seq[Any] = Seq(file) }
+case class Load(file: String) extends IgvCommand { override val params: Seq[Any] = Seq(file) }
+object Load {
+  def apply(file: FilePath): Load = Load(file.toString)
+  def apply(file: Seq[FilePath]): Load = Load(file.mkString(","))
+}
 case class Region(interval: Interval) extends IgvCommand {
   override val params: Seq[Any] = Seq(interval)
   override def toString: String = Seq(simpleName, interval.getContig, interval.getStart, interval.getEnd).mkString(" ")
@@ -54,7 +56,7 @@ case class Squish(trackName: String) extends IgvCommand { override val params: S
 case class ViewAsPairs(trackName: String) extends IgvCommand { override val params: Seq[Any] = Seq(trackName) }
 case class Preference(key: String, value: String) extends IgvCommand { override val params: Seq[Any] = Seq(key, value) }
 
-/** A 1-based genomic span with optional start and end positions. */
+/** A 1-based genomic span with optional start and end positions. */ // TODO: A locus in IGV-terms is not just this.
 case class Locus(contig: String, start: Option[Int], end: Option[Int]) {
   override def toString: String = {
     (start, end) match {
@@ -63,16 +65,5 @@ case class Locus(contig: String, start: Option[Int], end: Option[Int]) {
       case (None, Some(e))    => s"$contig:$e"
       case (None, None)       => contig
     }
-  }
-}
-
-/** Defaults and functions for [[IgvCommand]]. */
-object IgvCommand {
-
-  /** Implicit conversions for [[IgvCommand]]. */
-  object IgvCommandConversions {
-
-    /** Convert an [[IgvCommand]] to a string where needed. */
-    implicit def playCommandToString(cmd: IgvCommand): String = cmd.toString
   }
 }

@@ -1,17 +1,25 @@
 package com.cvbio.tools.igv
 
 import scala.collection.mutable.ListBuffer
-import scala.language.implicitConversions
 
 /** A sequence of [[IgvCommand]]s.  */
 class IgvPlay private(private val commands: ListBuffer[IgvCommand]) extends Iterable[IgvCommand] {
 
-  /** Iterator over the [[IgvCommand]]s.  */
+  /** Iterator over the [[IgvCommand]]s. */
   def iterator: Iterator[IgvCommand] = commands.iterator
+
+  /** The number of commands within this [[IgvPlay]]. */
+  def length: Int = this.commands.length
 
   /** Append an item to this [[IgvPlay]]. */
   def add(item: IgvCommand): this.type = {
     commands += item
+    this
+  }
+
+  /** Append an item to this [[IgvPlay]]. */
+  def add(item: Seq[IgvCommand]): this.type = {
+    commands ++= item
     this
   }
 
@@ -23,8 +31,6 @@ class IgvPlay private(private val commands: ListBuffer[IgvCommand]) extends Iter
     commands ++= items
     this
   }
-
-  def length: Int = this.commands.length
 }
 
 /** Companion object for [[IgvPlay]]. */
