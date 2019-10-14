@@ -15,6 +15,12 @@ object ClpGroups {
     override val description: String = "Tools for downloading and formatting Ensembl data."
   }
 
+  class _Igv extends ClpGroup {
+    override val name: String = "IGV"
+    override val description: String = "Tools for working with the Integrated Genomics Viewer."
+  }
+
   final val Ensembl  = classOf[_Ensembl]
+  final val Igv      = classOf[_Igv]
   final val SamOrBam = classOf[_SamOrBam]
 }
