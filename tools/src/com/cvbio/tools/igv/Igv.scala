@@ -2,7 +2,9 @@ package com.cvbio.tools.igv
 
 import java.io.Closeable
 
-/** An abstraction over a running IGV application. */
+import com.cvbio.commons.CommonsDef.FilenameSuffix
+
+/** An interface to a running IGV application. */
 class Igv(host: String, port: Int) extends Closeable {
   private val controller = new IgvController(host, port)
   def runPlay(play: IgvPlay): Unit = play.toList.foreach(controller.exec)
@@ -18,4 +20,7 @@ object Igv {
 
   /** The default port. */
   val DefaultPort: Int = 60151
+
+  /** Valid output suffixes for snapshot file paths. */
+  val ValidOutputSuffixes: Seq[FilenameSuffix] = Seq(".png", ".jpg", ".svg")
 }
