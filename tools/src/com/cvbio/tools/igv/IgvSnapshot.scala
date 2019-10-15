@@ -3,8 +3,9 @@ package com.cvbio.tools.igv
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import com.cvbio.tools.igv.Igv._
+import com.fulcrumgenomics.commons.io.PathUtil
+import com.fulcrumgenomics.commons.io.PathUtil.{basename, sanitizeFileName}
 import com.fulcrumgenomics.sopt._
-import htsjdk.samtools.util.Interval
 
 @clp(
   description =
@@ -19,33 +20,25 @@ import htsjdk.samtools.util.Interval
   group = ClpGroups.Igv
 ) class IgvSnapshot(
   @arg(flag = 'i', doc = "Input files to display.", minElements = 1) val input: Seq[FilePath],
-  @arg(flag = 'c', doc = "The contig to \"goto\".") val contig: String,
-  @arg(flag = 's', doc = "The start position to \"goto\".") val start: Int,
-  @arg(flag = 'e', doc = "The end position to \"goto\".") val end: Int,
-  @arg(flag = 'o', doc = "Output path to a rendered image (.png, .jpg, or .svg).") val output: Option[FilePath] = None,
+  @arg(flag = 'l', doc = "The loci to take snapshots over. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
+  // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
+  // @arg(flag = 'f', doc = "The output snapshot format") val format: OutputFormat = OutputFormat.Svg,
+  @arg(flag = 'j', doc = "The IGV Jar file, if we are to initialize IGV ourselves.") val jar: Option[FilePath] = None,
+  @arg(flag = 'm', doc = "The memory, in megabytes, given to IGV, if we are to initialize.") val memory: Int = DefaultMemory,
   @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = DefaultHost,
   @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = DefaultPort,
+  @arg(flag = 'x', doc = "Close the IGV application after execution") val closeOnExit: Boolean = false,
 ) extends CvBioTool {
 
-  output.foreach(validateOutput)
-
   override def execute(): Unit = {
-    val play = new IgvPlay()
-    val igv  = new Igv(host, port)
+    val igv  = jar match {
+      case Some(_jar) => Igv(_jar, host, port, memory, closeOnExit)
+      case None       => Igv(Igv.Executable, host, port, closeOnExit)
+    }
 
-    play += New
-    play += Load(input)
-    play += Goto(new Interval(contig, start, end))
-
-    output.foreach(path => play += Snapshot(path.toAbsolutePath))
+    val play = new IgvPlay() += New += Load(input)
+    if (loci.nonEmpty) { play += Goto(loci) }
 
     igv.runPlay(play)
-    igv.close()
-  }
-
-  /** Validate the output file path to ensure it ends with the correct extension. */
-  private def validateOutput(output: FilePath): Unit = {
-    lazy val message = s"Output must have one of ${ValidOutputSuffixes.mkString(", ")} file extensions. Found: $output"
-    validate(ValidOutputSuffixes.exists(output.toString.endsWith), message = message)
   }
 }
