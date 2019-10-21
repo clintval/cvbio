@@ -32,7 +32,7 @@ import scala.collection.mutable.ListBuffer
 
   /** Run the tool [[IgvControl]]. */
   override def execute(): Unit = {
-    val igv  = jar match {
+    val igv = jar match {
       case Some(_jar) => Igv(_jar, host, port, memory, closeOnExit)
       case None       => Igv(Igv.Executable, host, port, closeOnExit)
     }
@@ -42,6 +42,6 @@ import scala.collection.mutable.ListBuffer
     if (input.nonEmpty) { commands += New += Load(input) }
     if (loci.nonEmpty)  { commands += Goto(loci) }
 
-    igv.exec(commands: _*)
+    igv.exec(commands)
   }
 }

@@ -73,9 +73,20 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
     *   [2019/10/14 18:09:05 | Igv | Info] Executing: exit
     * }}}
     */
-  def exec(commands: IgvCommand*): Seq[Option[Igv.IgvResponse]] = {
-    commands.map(command => exec(command.toString))
-  }
+  def exec(command: IgvCommand): Option[Igv.IgvResponse] = exec(command.toString)
+
+  /** Execute multiple IGV commands.
+    *
+    * {{{
+    *   scala> val igv = new Igv("127.0.0.1", 60151)
+    *   scala> igv.exec(Seq(Echo, Goto(new Interval("chr21", 6495564, 6495564)))
+    *   [2019/10/14 18:07:12 | Igv | Info] Executing: echo
+    *   [2019/10/14 18:07:25 | Igv | Info] Response: echo
+    *   [2019/10/14 18:08:01 | Igv | Info] Executing: goto chr21:6495564-6495564
+    *   [2019/10/14 18:08:03 | Igv | Info] Response: OK
+    * }}}
+    */
+  def exec(commands: Seq[IgvCommand]): Seq[Option[Igv.IgvResponse]] = commands.map(exec)
 
   /** Closes the socket connection to the IGV server. */
   def close(): Unit = close(andKill = false)
