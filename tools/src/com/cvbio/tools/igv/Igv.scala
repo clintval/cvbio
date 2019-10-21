@@ -73,10 +73,9 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
     *   [2019/10/14 18:09:05 | Igv | Info] Executing: exit
     * }}}
     */
-  def exec(command: IgvCommand): Option[Igv.IgvResponse] = exec(command.toString)
-
-  /** Run a sequence of IGV commands. */
-  def runPlay(play: IgvPlay): Unit = play.toList.foreach(exec)
+  def exec(commands: IgvCommand*): Seq[Option[Igv.IgvResponse]] = {
+    commands.map(command => exec(command.toString))
+  }
 
   /** Closes the socket connection to the IGV server. */
   def close(): Unit = close(andKill = false)

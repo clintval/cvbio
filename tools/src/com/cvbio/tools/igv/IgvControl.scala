@@ -3,9 +3,9 @@ package com.cvbio.tools.igv
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import com.cvbio.tools.igv.Igv._
-import com.fulcrumgenomics.commons.io.PathUtil
-import com.fulcrumgenomics.commons.io.PathUtil.{basename, sanitizeFileName}
 import com.fulcrumgenomics.sopt._
+
+import scala.collection.mutable.ListBuffer
 
 @clp(
   description =
@@ -18,7 +18,7 @@ import com.fulcrumgenomics.sopt._
       |  - https://github.com/stevekm/IGV-snapshot-automator
     """,
   group = ClpGroups.Igv
-) class IgvSnapshot(
+) class IgvControl(
   @arg(flag = 'i', doc = "Input files to display.", minElements = 1) val input: Seq[FilePath],
   @arg(flag = 'l', doc = "The loci to take snapshots over. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
   // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
@@ -30,15 +30,17 @@ import com.fulcrumgenomics.sopt._
   @arg(flag = 'x', doc = "Close the IGV application after execution") val closeOnExit: Boolean = false,
 ) extends CvBioTool {
 
+  /** Run the tool [[IgvControl]]. */
   override def execute(): Unit = {
     val igv  = jar match {
       case Some(_jar) => Igv(_jar, host, port, memory, closeOnExit)
       case None       => Igv(Igv.Executable, host, port, closeOnExit)
     }
 
-    val play = new IgvPlay() += New += Load(input)
-    if (loci.nonEmpty) { play += Goto(loci) }
+    val commands = new ListBuffer[IgvCommand]() += New += Load(input)
 
-    igv.runPlay(play)
+    if (loci.nonEmpty) { commands += Goto(loci) }
+
+    igv.exec(commands: _*)
   }
 }
