@@ -19,7 +19,7 @@ import scala.collection.mutable.ListBuffer
     """,
   group = ClpGroups.Igv
 ) class IgvControl(
-  @arg(flag = 'i', doc = "Input files to display.", minElements = 1) val input: Seq[FilePath],
+  @arg(flag = 'i', doc = "Input files to display.") val input: Seq[FilePath] = Seq.empty,
   @arg(flag = 'l', doc = "The loci to take snapshots over. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
   // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
   // @arg(flag = 'f', doc = "The output snapshot format") val format: OutputFormat = OutputFormat.Svg,
@@ -37,9 +37,10 @@ import scala.collection.mutable.ListBuffer
       case None       => Igv(Igv.Executable, host, port, closeOnExit)
     }
 
-    val commands = new ListBuffer[IgvCommand]() += New += Load(input)
+    val commands = new ListBuffer[IgvCommand]()
 
-    if (loci.nonEmpty) { commands += Goto(loci) }
+    if (input.nonEmpty) { commands += New += Load(input) }
+    if (loci.nonEmpty)  { commands += Goto(loci) }
 
     igv.exec(commands: _*)
   }
