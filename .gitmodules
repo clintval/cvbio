@@ -1,6 +1,3 @@
 [submodule "tools/src/main/resources/chromosome-mappings"]
 	path = tools/src/main/resources/chromosome-mappings
 	url = https://github.com/dpryan79/ChromosomeMappings.git
-[submodule "tools/src/resources/chromosome-mappings"]
-	path = tools/src/resources/chromosome-mappings
-	url = https://github.com/dpryan79/ChromosomeMappings.git

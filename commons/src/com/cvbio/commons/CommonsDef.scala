@@ -39,16 +39,6 @@ object CommonsDef extends FgBioCommonsDef {
     def tapEach[U](fn: T => U): TraversableOnce[T] = self.map { item: T => fn(item); item }
   }
 
-  /** Cast a tuple of [[Option]]s in which only one is set, into an [[Either]].
-    *
-    * @throws IllegalStateException when both Options are set or neither are set.
-    */
-  def optionToEither[A, B](tuple: (Option[A], Option[B])): Either[A, B] = tuple match {
-    case (Some(l), None) => println(l); Left(l)
-    case (None, Some(r)) => println(r); Right(r)
-    case (_, _)          => throw new IllegalStateException(s"Options are not mutually exclusive and one was not set: $tuple")
-  }
-
   /** Insert a separating item after every item. */
   def interleave[T](sep: T): Seq[T] => Seq[T] = (seq: Seq[T]) => seq.flatMap(Seq(_, sep))
 
