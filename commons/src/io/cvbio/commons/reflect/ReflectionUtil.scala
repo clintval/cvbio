@@ -1,10 +1,8 @@
 package io.cvbio.commons.reflect
 
 import io.cvbio.commons.CommonsDef._
-
 import scala.io.Source
 
-/** Common reflection utilities. */
 object ReflectionUtil {
 
   /** Stream a resource object to lines. */

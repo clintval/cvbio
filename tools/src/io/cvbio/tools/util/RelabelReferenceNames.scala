@@ -38,6 +38,10 @@ import scala.collection.immutable
     Seq(inputFormat, outputFormat, assembly).map(_.isEmpty).distinct.length == 1,
     "All of `assembly`, `inputFormat`, and `outputFormat` must be defined, or none at all."
   )
+  validate(
+    !(inputFormat.isEmpty && outputFormat.isEmpty && assembly.isEmpty && mappingFile.isEmpty),
+    "Must specify either a mapping specification or mapping file."
+  )
 
   override def execute(): Unit = {
     Io.assertReadable(in)
@@ -51,6 +55,7 @@ import scala.collection.immutable
       case _                                      => unreachable("CLI validators should never let this happen!")
     }
 
+    println(assembly, inputFormat, outputFormat)
     lines.foreach(println)
   }
 }
