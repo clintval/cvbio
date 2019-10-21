@@ -1,11 +1,12 @@
 package com.cvbio.tools.igv
 
 import java.io.{BufferedReader, Closeable, InputStreamReader, PrintWriter}
-import java.net.Socket
+import java.net.{InetAddress, Socket}
 
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.commons.ConfigurationUtil
 import com.cvbio.commons.io.Io
+import com.cvbio.tools.igv.Igv.IgvResponse
 import com.fulcrumgenomics.FgBioDef.FgBioEnum
 import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LazyLogging}
 import enumeratum.EnumEntry
@@ -50,11 +51,11 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
   }
 
   /** Execute a command against the current IGV server. */
-  private def exec(args: String*): Option[Igv.IgvResponse] = {
+  private def exec(args: String*): Option[IgvResponse] = {
     val command = args.map(_.trim).mkString(" ")
     logger.info(s"Executing: $command")
     this.out.println(command)
-    val response: Option[Igv.IgvResponse] = Option(this.in.readLine())
+    val response: Option[IgvResponse] = Option(this.in.readLine())
     response.foreach(r => logger.info(s"Response: $r")) // Not all commands respond!
     response
   }
@@ -73,7 +74,7 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
     *   [2019/10/14 18:09:05 | Igv | Info] Executing: exit
     * }}}
     */
-  def exec(command: IgvCommand): Option[Igv.IgvResponse] = exec(command.toString)
+  def exec(command: IgvCommand): Option[IgvResponse] = exec(command.toString)
 
   /** Execute multiple IGV commands.
     *
@@ -86,7 +87,7 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
     *   [2019/10/14 18:08:03 | Igv | Info] Response: OK
     * }}}
     */
-  def exec(commands: Seq[IgvCommand]): Seq[Option[Igv.IgvResponse]] = commands.map(exec)
+  def exec(commands: Seq[IgvCommand]): Seq[Option[IgvResponse]] = commands.map(exec)
 
   /** Closes the socket connection to the IGV server. */
   def close(): Unit = close(andKill = false)
@@ -110,7 +111,7 @@ object Igv extends LazyLogging {
   type IgvResponse = String
 
   /** The default host IP. */
-  val DefaultHost: String = "127.0.0.1"
+  val DefaultHost: String = InetAddress.getLoopbackAddress.getHostAddress
 
   /** The default memory in megabytes to use when launching IGV. */
   val DefaultMemory: Int = 4000
@@ -132,25 +133,23 @@ object Igv extends LazyLogging {
   /** Initialize the IGV application from a JAR file, if not already running.*/
   def apply(
     jar: FilePath,
-    host: String,
     port: Int,
     memory: Int,
     closeOnExit: Boolean
   ): Igv = {
     val command = Seq("java", s"-Xmx${memory}m", "-jar", jar.toAbsolutePath.toString)
-    initialize(command, host, port, closeOnExit)
+    initialize(command, DefaultHost, port, closeOnExit)
   }
 
   /** Initialize the IGV application from an executable, if not already running.*/
   def apply(
     executable: String,
-    host: String,
     port: Int,
     closeOnExit: Boolean
   ): Igv = {
     ConfigurationUtil.findExecutableInPath(executable) match {
       case None       => throw new IllegalStateException(s"Could not find executable: '$executable'")
-      case Some(exec) => initialize(Seq(exec.toAbsolutePath.toString), host, port, closeOnExit)
+      case Some(exec) => initialize(Seq(exec.toAbsolutePath.toString), DefaultHost, port, closeOnExit)
     }
   }
 
@@ -169,7 +168,7 @@ object Igv extends LazyLogging {
       do {
         logger.info(s"Waiting for a socket connection: $host:$port")
         Thread.sleep(DefaultWaitTime)
-      } while (!available(host, port))
+      } while (!available(host, port)) // TODO: Need to timeout, especially if port is incorrect.
 
       val igv = new Igv(host, port)
 

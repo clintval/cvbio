@@ -2,7 +2,7 @@ package com.cvbio.tools.igv
 
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.cvbio.tools.igv.Igv._
+import com.cvbio.tools.igv.Igv.{DefaultHost, DefaultPort, DefaultMemory, Executable}
 import com.fulcrumgenomics.sopt._
 
 import scala.collection.mutable.ListBuffer
@@ -53,15 +53,18 @@ import scala.collection.mutable.ListBuffer
   /** Run the tool [[IgvBoss]]. */
   override def execute(): Unit = {
     val commands = new ListBuffer[IgvCommand]()
-
-    val igv = jar match {
-      case Some(_jar) => Igv(_jar, host, port, memory, closeOnExit)
-      case None       => Igv(Igv.Executable, host, port, closeOnExit)
-    }
-
     if (input.nonEmpty) { commands += New += Load(input) }
     if (loci.nonEmpty)  { commands += Goto(loci) }
-
     igv.exec(commands)
+  }
+
+  /** Connect to IGV if it is available, else initialize and then connect. */
+  private lazy val igv: Igv = {
+    if (Igv.available(host, port)) { new Igv(host, port) } else {
+      jar match {
+        case Some(_jar) => Igv(_jar, port, memory, closeOnExit)
+        case None       => Igv(Executable, port, closeOnExit)
+      }
+    }
   }
 }
