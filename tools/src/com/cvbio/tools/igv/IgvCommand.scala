@@ -57,8 +57,9 @@ private[igv] case class Goto(locus: Seq[String]) extends IgvCommand { // TODO: W
 
 /** Companion object to [[Goto]]. */
 private[igv] object Goto {
-  def apply(locus: Locus): Goto = new Goto(Seq(locus.toString))
-  def apply(interval: Interval): Goto = Goto.apply(Locus(interval.getContig, Some(interval.getStart), Some(interval.getEnd)))
+  def apply(interval: Interval): Goto = {
+    new Goto(Seq(interval.getContig + ":" + interval.getStart + "-" + interval.getEnd)
+  }
 }
 
 /** Loads data or session files. Specify a comma-delimited list of full paths or URLs. */
@@ -104,7 +105,7 @@ private[igv] case class Snapshot(path: FilePath) extends IgvCommand { override v
   * option can define a single position, or a range. If absent sorting will be perfomed based on the region in view,
   * or the center position of the region in view, depending on the option.
   */
-private[igv] case class Sort(option: String, locus: Locus) extends IgvCommand
+private[igv] case class Sort(option: String, locus: String) extends IgvCommand
 
 /** Squish a given trackName. trackName is optional, and if it is not supplied all annotation tracks are squished. */
 private[igv] case class Squish(trackName: String) extends IgvCommand
@@ -116,15 +117,3 @@ private[igv] case class ViewAsPairs(trackName: Option[String]) extends OptionalT
   * shut-down.
   */
 private[igv] case class Preference(key: String, value: String) extends IgvCommand
-
-/** A 1-based genomic span with optional start and end positions. */ // TODO: A locus in IGV-terms is not just this.
-private[igv] case class Locus(contig: String, start: Option[Int], end: Option[Int]) {
-  override def toString: String = {
-    (start, end) match {
-      case (Some(s), Some(e)) => s"$contig:$s-$e"
-      case (Some(s), None)    => s"$contig:$s"
-      case (None, Some(e))    => s"$contig:$e"
-      case (None, None)       => contig
-    }
-  }
-}
