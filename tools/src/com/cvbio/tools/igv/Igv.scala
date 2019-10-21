@@ -31,7 +31,7 @@ class Igv(host: String, port: Int) extends LazyLogging with CaptureSystemStreams
 
   /** The socket connection to the IGV server. */
   private val socket = {
-    logger.info(s"Attempting a socket connection to $host:$port")
+    logger.info(s"Attempting a socket connection: $host:$port")
     require(Igv.available(host, port), s"Port already in use: $host:$port.")
     new Socket(host, port)
   }
