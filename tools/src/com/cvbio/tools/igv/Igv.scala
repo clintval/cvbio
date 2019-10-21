@@ -119,7 +119,7 @@ object Igv extends LazyLogging {
   val DefaultPort: Int = 60151
 
   /** The time to wait before checking if IGV has booted in milliseconds. */
-  private val DefaultWaitTime: Int = 4000
+  private val DefaultWaitTime: Int = 2000
 
   /** The name of the executable. */
   val Executable: String = "igv"
