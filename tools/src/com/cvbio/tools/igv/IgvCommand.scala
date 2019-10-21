@@ -48,7 +48,7 @@ private[igv] object Genome {
   * a split screen view. Use any syntax that is valid in the IGV search box. Inputting "all" scrolls to a whole genome
   * view.
   */
-private[igv] case class Goto(locus: Seq[String]) extends IgvCommand { // TODO: Wrong base type in constructor...
+private[igv] case class Goto(locus: Seq[String]) extends IgvCommand {
   override val params: Seq[Any] = Seq(locus)
   override def toString: String = {
     (Seq(simpleName) ++ locus.map(_.toString)).mkString(" ")
