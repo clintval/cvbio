@@ -133,8 +133,8 @@ object Igv extends LazyLogging {
   /** Initialize the IGV application from a JAR file, if not already running.*/
   def apply(
     jar: FilePath,
-    port: Int,
     memory: Int,
+    port: Int,
     closeOnExit: Boolean
   ): Igv = {
     val command = Seq("java", s"-Xmx${memory}m", "-jar", jar.toAbsolutePath.toString)

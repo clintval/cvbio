@@ -51,7 +51,7 @@ import scala.collection.mutable.ListBuffer
 ) extends CvBioTool {
 
   /** Run the tool [[IgvBoss]]. */
-  override def execute(): Unit = {
+  override def execute: Unit = {
     val commands = new ListBuffer[IgvCommand]()
     if (input.nonEmpty) { commands += New += Load(input) }
     if (loci.nonEmpty)  { commands += Goto(loci) }
@@ -62,7 +62,7 @@ import scala.collection.mutable.ListBuffer
   private lazy val igv: Igv = {
     if (Igv.available(host, port)) { new Igv(host, port) } else {
       jar match {
-        case Some(_jar) => Igv(_jar, port, memory, closeOnExit)
+        case Some(_jar) => Igv(_jar, memory, port, closeOnExit)
         case None       => Igv(Executable, port, closeOnExit)
       }
     }
