@@ -113,8 +113,8 @@ object Igv extends LazyLogging {
   /** The default host IP. */
   val DefaultHost: String = InetAddress.getLoopbackAddress.getHostAddress
 
-  /** The default memory in megabytes to use when launching IGV. */
-  val DefaultMemory: Int = 4000
+  /** The default memory in gigabytes to use when launching IGV. */
+  val DefaultMemory: Int = 5
 
   /** The default port. */
   val DefaultPort: Int = 60151

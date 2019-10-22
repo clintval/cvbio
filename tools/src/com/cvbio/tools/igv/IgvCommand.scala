@@ -35,7 +35,7 @@ case class Expand(trackName: Option[String]) extends OptionalTrackName(trackName
 case class Genome(genome: String) extends IgvCommand { override def params: Seq[Any] = Seq(genome) }
 
 /** Companion object to [[Genome]] for other  */
-private[igv] object Genome {
+object Genome {
 
   /** Selects a genome (or indexed fasta) from the supplied path. */
   def apply(genome: FilePath): Genome = new Genome(genome.toString)
