@@ -102,10 +102,10 @@ object commons extends CommonModule {
 
   /** Ivy dependencies. */
   override def ivyDeps = Agg(
-    ivy"eu.timepit::refined::0.9.9",
+    // ivy"eu.timepit::refined::0.9.9",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
-    ivy"org.reflections:reflections:0.9.11",
+    // ivy"org.reflections:reflections:0.9.11",
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
 
@@ -123,7 +123,7 @@ object pipelines extends CommonModule {
   )
 
   /** Module dependencies. */
-  override def moduleDeps = Seq(commons)
+  override def moduleDeps: Seq[commons.type] = Seq(commons)
 
   /** Build a JAR file from the pipelines project. */
   def localJar = T { super.localJar(assembly(), jarName = "cvbio-pipelines.jar") }
@@ -143,7 +143,7 @@ object tools extends CommonModule {
   )
 
   /** Module dependencies. */
-  override def moduleDeps = Seq(commons)
+  override def moduleDeps: Seq[commons.type] = Seq(commons)
 
   /** Build a JAR file from the tools project. */
   def localJar = T { super.localJar(assembly(), jarName = "cvbio.jar") }
