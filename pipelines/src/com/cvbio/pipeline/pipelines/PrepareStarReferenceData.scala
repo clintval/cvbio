@@ -3,6 +3,7 @@ package com.cvbio.pipeline.pipelines
 import com.cvbio.commons.CommonsDef.{DirPath, PathToFasta, PathToGtf}
 import com.cvbio.pipeline.cmdline.ClpGroups
 import com.cvbio.pipeline.tasks.star.StarGenerateGenome
+import com.cvbio.pipeline.tasks.star.StarGenerateGenome.DefaultCores
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt.{arg, clp}
 import dagr.core.execsystem.Cores
@@ -42,12 +43,12 @@ import dagr.core.tasksystem.Pipeline
   @arg(flag = 'g', doc = "The transcripts in GTF format.") val gtf: PathToGtf,
   @arg(flag = 'o', doc = "The output directory.") val out: DirPath,
   @arg(doc = "The splice junction overhang size.") val overhang: Int = 100,
-  @arg(doc = "The number of threads to use.") val threads: Cores = StarGenerateGenome.DefaultCores
+  @arg(doc = "The number of threads to use.") val threads: Cores = DefaultCores
 ) extends Pipeline {
 
   override def build(): Unit = {
     Io.assertReadable(fasta :+ gtf)
-    Io.assertWritableDirectory(out)
+    Io.mkdirs(out)
 
     root ==> new StarGenerateGenome(fasta = fasta, gtf = gtf, outputDir = out, overhang = overhang)
   }
