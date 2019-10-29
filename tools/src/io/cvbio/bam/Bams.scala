@@ -1,8 +1,5 @@
 package io.cvbio.bam
 
-import io.cvbio.bam.Bams.ReadOrdinal.{All, Read1, Read2}
-import io.cvbio.commons.CommonsDef._
-import io.cvbio.commons.effectful.Io
 import com.fulcrumgenomics.FgBioDef.{DirPath, FgBioEnum}
 import com.fulcrumgenomics.bam.Bams.sorter
 import com.fulcrumgenomics.bam.Template
@@ -14,6 +11,9 @@ import com.fulcrumgenomics.util.ProgressLogger
 import enumeratum.EnumEntry
 import htsjdk.samtools.util.CloserUtil
 import htsjdk.samtools.{SAMFileHeader => SamFileHeader}
+import io.cvbio.bam.Bams.ReadOrdinal.{Read1, Read2}
+import io.cvbio.commons.CommonsDef._
+import io.cvbio.commons.effectful.Io
 
 /** Common methods for working with SAM/BAM files. */
 object Bams extends LazyLogging {
@@ -30,7 +30,6 @@ object Bams extends LazyLogging {
     /** Return the SAM tags across a specific read ordinal. */
     def tagValues[T](ordinal: ReadOrdinal, tag: SamTag): Seq[Option[T]] = {
       ordinal match {
-        case All   => template.allReads.toSeq.map(_.get[T](tag))
         case Read1 => (template.r1 ++: template.r1Secondaries ++: template.r1Supplementals).map(_.get[T](tag))
         case Read2 => (template.r2 ++: template.r2Secondaries ++: template.r2Supplementals).map(_.get[T](tag))
       }
@@ -45,9 +44,6 @@ object Bams extends LazyLogging {
 
     /** Return all read ordinals. */
     def values: scala.collection.immutable.IndexedSeq[ReadOrdinal] = findValues
-
-    /** All read ordinals. */
-    case object All extends ReadOrdinal
 
     /** The read ordinal for read one. */
     case object Read1 extends ReadOrdinal

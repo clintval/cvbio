@@ -1,12 +1,12 @@
 package io.cvbio.bam
 
-import io.cvbio.bam.Bams._
-import io.cvbio.bam.Bams.ReadOrdinal.{All, Read1, Read2}
-import io.cvbio.testing.{TemplateBuilder, UnitSpec}
 import com.fulcrumgenomics.bam.api.{SamOrder, SamSource}
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.testing.SamBuilder
 import htsjdk.samtools.SAMFileHeader.GroupOrder
+import io.cvbio.bam.Bams.ReadOrdinal.{Read1, Read2}
+import io.cvbio.bam.Bams._
+import io.cvbio.testing.{TemplateBuilder, UnitSpec}
 
 class BamsTest extends UnitSpec {
 
@@ -22,7 +22,6 @@ class BamsTest extends UnitSpec {
 
     builder.template.tagValues[Int](Read1, tag = "NM").flatten should contain theSameElementsInOrderAs Seq(2, 6, 16)
     builder.template.tagValues[Int](Read2, tag = "NM").flatten should contain theSameElementsInOrderAs Seq(3, 10)
-    builder.template.tagValues[Int](All,   tag = "NM").flatten should contain theSameElementsInOrderAs Seq(2, 3, 16, 6, 10)
   }
 
   "Bams.templatesIterator" should "accept no SamSource and do nothing" in {
