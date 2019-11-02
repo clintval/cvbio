@@ -19,7 +19,7 @@ private val fgbioVersion        = "1.1.0-2100905-SNAPSHOT"
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
 /** A base trait for versioning modules. */
-trait ReleaseModule extends JavaModule with PublishModule {
+trait ReleaseModule extends PublishModule {
 
   /** Execute Git arguments and return the standard output. */
   private def git(args: String*): String = %%("git", args)(pwd).out.string.trim
@@ -67,14 +67,12 @@ trait ReleaseModule extends JavaModule with PublishModule {
 
   /** POM Settings. */
   override def pomSettings: T[PomSettings] = PomSettings(
-    description = "Artisanal bioinformatics tools and pipelines in Scala",
-    organization = "io.cvbio",
-    url = "https://github.com/clintval/cvbio",
-    licenses = Seq(License.MIT),
+    description    = "Artisanal bioinformatics tools and pipelines in Scala",
+    organization   = "io.cvbio",
+    url            = "https://github.com/clintval/cvbio",
+    licenses       = Seq(License.MIT),
     versionControl = VersionControl.github("clintval", "cvbio"),
-    developers = Seq(
-      Developer("clintval", "Clint Valentine", "https://github.com/clintval")
-    )
+    developers     = Seq(Developer("clintval", "Clint Valentine", "https://github.com/clintval"))
   )
 }
 
@@ -161,7 +159,7 @@ object pipelines extends CommonModule {
 object tools extends CommonModule {
 
   /** The artifact name. */
-  override def artifactName: T[String] = "cvbio"
+  override def artifactName: T[String] = "tools"
 
   /** Ivy dependencies. */
   override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
