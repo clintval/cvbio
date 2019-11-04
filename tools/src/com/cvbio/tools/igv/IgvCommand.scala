@@ -53,6 +53,7 @@ case class Goto(locus: Seq[String]) extends IgvCommand {
 /** Companion object to [[Goto]]. */
  object Goto {
 
+  /** Go to a locatable. */
   def apply[T <: Locatable](locatable: T): Goto = {
     new Goto(Seq(locatable.getContig + ":" + locatable.getStart + "-" + locatable.getEnd))
   }
@@ -64,7 +65,7 @@ case class Load(file: String) extends IgvCommand {
 }
 
 /** Companion object to [[Load]]. */
-private[igv] object Load {
+object Load {
   def apply(file: FilePath): Load      = Load(file.toString)
   def apply(file: Seq[FilePath]): Load = Load(file.mkString(","))
 }
