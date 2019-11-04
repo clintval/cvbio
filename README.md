@@ -116,7 +116,7 @@ Prior Art
 #### Command Line Usage
 
 ```console
-❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l <(cut -f4 < targets.bed | head -n2)
+❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l $(cut -f4 < targets.bed | head -n2)
 ```
 
 #### Long Tool Description
