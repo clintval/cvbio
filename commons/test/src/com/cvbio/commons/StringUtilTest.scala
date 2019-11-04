@@ -13,8 +13,6 @@ class StringUtilTest extends UnitSpec {
     StringUtil.uncapitilize("A") shouldBe "a"
     StringUtil.uncapitilize("0") shouldBe "0"
     StringUtil.uncapitilize("!") shouldBe "!"
-
-
   }
 
   it should "uncapitilize the first of many characters" in {

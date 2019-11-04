@@ -168,7 +168,9 @@ object Igv extends LazyLogging {
       do {
         logger.info(s"Waiting for a socket connection: $host:$port")
         Thread.sleep(DefaultWaitTime)
-      } while (!available(host, port)) // TODO: Need to timeout, especially if port is incorrect.
+      } while (process.isAlive && !available(host, port)) // TODO: Need to timeout, especially if port is incorrect.
+
+      if (!process.isAlive) require(process.exitValue() == 0, "Could not initialize IGV.")
 
       val igv = new Igv(host, port)
 

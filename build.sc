@@ -81,7 +81,10 @@ trait CommonModule extends ScalaModule with ReleaseModule with ScoverageModule {
 
 /** The ScalaTest settings. */
 trait ScalaTest extends TestModule {
-  override def ivyDeps = Agg(ivy"org.scalatest::scalatest::3.0.7".excludeOrg(organizations="org.junit"))
+  override def ivyDeps = Agg(
+    ivy"org.scalatest::scalatest::3.0.7".excludeOrg(organizations="org.junit"),
+    ivy"org.scalamock::scalamock::4.4.0"
+  )
   override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
 }
 

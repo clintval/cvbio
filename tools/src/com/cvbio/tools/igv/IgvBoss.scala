@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
       |
       |### IGV Startup
       |
-      |There are three supported ways to intialize IGV:
+      |There are three supported ways to initialize IGV:
       |
       |  - Let this tool connect to an already-running IGV session
       |  - Supply an IGV JAR file path and let this tool run it
@@ -26,11 +26,12 @@ import scala.collection.mutable.ListBuffer
       |and execute the application.
       |
       |You can shutdown IGV on exit with the `--close-on-exit` option. This will work regardless of how this tool
-      |initially connected to IGV.
+      |initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
       |
       |### Controlling IGV
       |
-      |If no inputs are provided, then no new sessions will be created. ...
+      |If no inputs are provided, then no new sessions will be created. Loci, for now, will result in a split-window
+      |view.
       |
       |## References and Prior Art
       |
@@ -40,7 +41,8 @@ import scala.collection.mutable.ListBuffer
   group = ClpGroups.Util
 ) class IgvBoss(
   @arg(flag = 'i', doc = "Input files to display.", minElements = 0) val input: Seq[FilePath] = Seq.empty,
-  @arg(flag = 'l', doc = "The loci to take snapshots over. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
+  @arg(flag = 'g', doc = "The genome to use (path, string, id).") genome: Option[String] = None,
+  @arg(flag = 'l', doc = "The loci to visit. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
   // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
   // @arg(flag = 'f', doc = "The output snapshot format") val format: OutputFormat = OutputFormat.Svg,
   @arg(flag = 'j', doc = "The IGV Jar file, if we are to initialize IGV.") val jar: Option[FilePath] = None,
@@ -53,8 +55,12 @@ import scala.collection.mutable.ListBuffer
   /** Run the tool [[IgvBoss]]. */
   override def execute: Unit = {
     val commands = new ListBuffer[IgvCommand]()
+
+    genome.foreach(g => commands += Genome(g))
+
     if (input.nonEmpty) { commands += New += Load(input) }
     if (loci.nonEmpty)  { commands += Goto(loci) }
+
     igv.exec(commands)
   }
 
