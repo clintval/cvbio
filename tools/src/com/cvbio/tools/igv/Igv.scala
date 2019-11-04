@@ -111,7 +111,7 @@ object Igv extends LazyLogging {
   type IgvResponse = String
 
   /** The default host IP. */
-  val DefaultHost: String = InetAddress.getLoopbackAddress.getHostAddress
+  lazy val DefaultHost: String = InetAddress.getLoopbackAddress.getHostAddress
 
   /** The default memory in gigabytes to use when launching IGV. */
   val DefaultMemory: Int = 5
@@ -127,7 +127,7 @@ object Igv extends LazyLogging {
 
   /** Check to see if IGV is available. */
   def available(host: String = DefaultHost, port: Int = DefaultPort): Boolean = {
-    Try { new Socket(host, port).close() }.isSuccess
+    Try { new Socket(host, port).close() } isSuccess
   }
 
   /** Initialize the IGV application from a JAR file, if not already running.*/
@@ -184,7 +184,7 @@ object Igv extends LazyLogging {
   }
 
   /** Trait that all enumerations of [[OutputFormat]] must extend. */
-  sealed trait OutputFormat extends EnumEntry { def suffix: FilenameSuffix  }
+  sealed trait OutputFormat extends EnumEntry { def suffix: FilenameSuffix }
 
   /** The supported image output formats. */
   object OutputFormat extends FgBioEnum[OutputFormat] {

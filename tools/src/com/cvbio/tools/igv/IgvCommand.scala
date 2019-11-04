@@ -4,15 +4,15 @@ import com.cvbio.commons.CommonsDef.{DirPath, FilePath}
 import com.cvbio.commons.StringUtil
 import htsjdk.samtools.util.Interval
 
-/** An IGV command that all commands should inherit from. */
+/** An IGV command that all commands inherit from. */
 sealed trait IgvCommand {
-  def params: Seq[Any] = Seq.empty
-  def simpleName: String = StringUtil.uncapitilize(this.getClass.getSimpleName.split("\\$").last)
-  override def toString: String = (Seq(simpleName) ++ params.map(_.toString)).mkString(" ")
+  def simpleName: String = StringUtil.uncapitilize(getClass.getSimpleName.split("\\$").last)
+  override def toString: String = simpleName
 }
 
 /** For all IGV commands which take an optional track name. */
-private[igv] sealed abstract class OptionalTrackName(trackName: Option[String]) extends IgvCommand {
+trait WithOptionalTrackName extends IgvCommand {
+  val trackName: Option[String]
   override def toString: String = (Seq(simpleName) ++ trackName).mkString(" ")
 }
 
@@ -26,13 +26,15 @@ case object Exit extends IgvCommand
 case object New extends  IgvCommand
 
 /** Collapses a given <trackName>. A <trackName> is optional, and if it is not supplied all tracks are collapsed. */
-case class Collapse(trackName: Option[String]) extends OptionalTrackName(trackName = trackName)
+case class Collapse(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Expands a given <trackName>. A <trackName> is optional, and if it is not supplied all tracks are expanded. */
-case class Expand(trackName: Option[String]) extends OptionalTrackName(trackName = trackName)
+case class Expand(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Selects a genome by ID. */
-case class Genome(genome: String) extends IgvCommand { override def params: Seq[Any] = Seq(genome) }
+case class Genome(genome: String) extends IgvCommand {
+  override def toString: String = Seq(simpleName, genome).mkString(" ")
+}
 
 /** Companion object to [[Genome]] for other  */
 object Genome {
@@ -41,11 +43,12 @@ object Genome {
   def apply(genome: FilePath): Genome = new Genome(genome.toString)
 }
 
-/** Scrolls to a single locus or a space-delimited list of loci. If a list is provided, these loci will be displayed in
-  * a split screen view. Use any syntax that is valid in the IGV search box. Inputting "all" scrolls to a whole genome
-  * view.
+/** Scrolls to a single locus or sequence of loci. If a sequence is provided, these loci will be displayed in a split
+  * screen view. Use any syntax that is valid in the IGV search box. Inputting "all" scrolls to a whole genome view.
   */
-case class Goto(locus: Seq[String]) extends IgvCommand { override val params: Seq[Any] = locus }
+case class Goto(locus: Seq[String]) extends IgvCommand {
+  override def toString: String = (simpleName +: locus).mkString(" ")
+}
 
 /** Companion object to [[Goto]]. */
  object Goto {
@@ -55,18 +58,19 @@ case class Goto(locus: Seq[String]) extends IgvCommand { override val params: Se
 }
 
 /** Loads data or session files. Specify a comma-delimited list of full paths or URLs. */
-case class Load(file: String) extends IgvCommand { override val params: Seq[Any] = Seq(file) }
+case class Load(file: String) extends IgvCommand {
+  override def toString: String = Seq(simpleName, file).mkString(" ")
+}
 
 /** Companion object to [[Load]]. */
 private[igv] object Load {
-  def apply(file: FilePath): Load = Load(file.toString)
+  def apply(file: FilePath): Load      = Load(file.toString)
   def apply(file: Seq[FilePath]): Load = Load(file.mkString(","))
 }
 
 
 /** Defines a region of interest bounded by the coordinates on a reference sequence. */
 case class Region(interval: Interval) extends IgvCommand {
-  override val params: Seq[Any] = Seq(interval)
   override def toString: String = Seq(simpleName, interval.getContig, interval.getStart, interval.getEnd).mkString(" ")
 }
 
@@ -76,22 +80,22 @@ case class Region(interval: Interval) extends IgvCommand {
   * increase it to see more data, decrease it to create smaller images.
   */
 case class MaxPanelHeight(height: Int) extends IgvCommand {
-  override def params: Seq[Any] = Seq(height)
+  override def toString: String = Seq(simpleName, height).mkString(" ")
 }
 
 /** Set to a log-scale or not. */
 case class SetLogScale(underlying: Boolean) extends AnyRef with IgvCommand {
-  override def params: Seq[Any] = Seq(underlying)
+  override def toString: String = Seq(simpleName, underlying).mkString(" ")
 }
 
 /** Sets a delay (sleep) time in milliseconds.  The sleep interval is invoked between successive commands. */
 case class SetSleepInterval(ms: Double) extends IgvCommand {
-  override def params: Seq[Any] = Seq(ms)
+  override def toString: String = Seq(simpleName, ms).mkString(" ")
 }
 
 /** Sets the directory in which to write images. */
 case class SnapshotDirectory(dir: DirPath) extends IgvCommand {
-  override def params: Seq[Any] = Seq(dir)
+  override def toString: String = Seq(simpleName, dir).mkString(" ")
 }
 
 /** Saves a snapshot of the IGV window to an image file. If filename is omitted, writes a PNG file with a filename
@@ -99,29 +103,27 @@ case class SnapshotDirectory(dir: DirPath) extends IgvCommand {
   * which must be .png, .jpg, or .svg.
   */
 case class Snapshot(path: FilePath) extends IgvCommand {
-  override val params: Seq[Any] = Seq(path)
+  override def toString: String = Seq(simpleName, path).mkString(" ")
 }
 
 /** Sorts an alignment track by the specified option. Recognized values for the option parameter are: base, position,
   * strand, quality, sample, readGroup, AMPLIFICATION, DELETION, EXPRESSION, SCORE, and MUTATION_COUNT. The locus
-  * option can define a single position, or a range. If absent sorting will be perfomed based on the region in view,
+  * option can define a single position, or a range. If absent sorting will be performed based on the region in view,
   * or the center position of the region in view, depending on the option.
   */
 case class Sort(option: String, locus: String) extends IgvCommand {
-  override def params: Seq[Any] = Seq(option, locus)
+  override def toString: String = Seq(simpleName, option, locus).mkString(" ")
 }
 
-/** Squish a given trackName. trackName is optional, and if it is not supplied all annotation tracks are squished. */
-case class Squish(trackName: String) extends IgvCommand {
-  override def params: Seq[Any] = Seq(trackName)
-}
+/** Squish a given <trackName>. <trackName> is optional, and if it is not supplied all annotation tracks are squished. */
+case class Squish(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Set the display mode for an alignment track to "View as pairs". A <trackName> is optional. */
-case class ViewAsPairs(trackName: Option[String]) extends OptionalTrackName(trackName = trackName)
+case class ViewAsPairs(trackName: Option[String]) extends WithOptionalTrackName
 
 /** Temporarily set the preference named <key> to the specified <value>. This preference only lasts until IGV is
   * shut-down.
   */
-private[igv] case class Preference(key: String, value: String) extends IgvCommand {
-  override def params: Seq[Any] = Seq(key, value)
+case class Preference(key: String, value: String) extends IgvCommand {
+  override def toString: String = Seq(simpleName, key, value).mkString(" ")
 }

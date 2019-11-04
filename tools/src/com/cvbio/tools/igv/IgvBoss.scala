@@ -37,7 +37,7 @@ import scala.collection.mutable.ListBuffer
       |  - https://software.broadinstitute.org/software/igv/PortCommands
       |  - https://github.com/stevekm/IGV-snapshot-automator
     """,
-  group = ClpGroups.Igv
+  group = ClpGroups.Util
 ) class IgvBoss(
   @arg(flag = 'i', doc = "Input files to display.", minElements = 0) val input: Seq[FilePath] = Seq.empty,
   @arg(flag = 'l', doc = "The loci to take snapshots over. (e.g. \"all\", \"chr1:23-99\", \"TP53\").", minElements = 0) val loci: Seq[String] = Seq.empty,
