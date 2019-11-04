@@ -2,7 +2,7 @@ package com.cvbio.tools.igv
 
 import com.cvbio.commons.CommonsDef.{DirPath, FilePath}
 import com.cvbio.commons.StringUtil
-import htsjdk.samtools.util.Interval
+import htsjdk.samtools.util.Locatable
 
 /** An IGV command that all commands inherit from. */
 sealed trait IgvCommand {
@@ -52,8 +52,9 @@ case class Goto(locus: Seq[String]) extends IgvCommand {
 
 /** Companion object to [[Goto]]. */
  object Goto {
-  def apply(interval: Interval): Goto = {
-    new Goto(Seq(interval.getContig + ":" + interval.getStart + "-" + interval.getEnd))
+
+  def apply[T <: Locatable](locatable: T): Goto = {
+    new Goto(Seq(locatable.getContig + ":" + locatable.getStart + "-" + locatable.getEnd))
   }
 }
 
@@ -70,8 +71,8 @@ private[igv] object Load {
 
 
 /** Defines a region of interest bounded by the coordinates on a reference sequence. */
-case class Region(interval: Interval) extends IgvCommand {
-  override def toString: String = Seq(simpleName, interval.getContig, interval.getStart, interval.getEnd).mkString(" ")
+case class Region[T <: Locatable](locatable: T) extends IgvCommand {
+  override def toString: String = Seq(simpleName, locatable.getContig, locatable.getStart, locatable.getEnd).mkString(" ")
 }
 
 /** Sets the number of vertical pixels (height) of each panel to include in image. Images created from a port command
