@@ -10,11 +10,11 @@ object ClpGroups {
     override val description: String = "Tools for manipulating SAM, BAM, and related data."
   }
 
-  class _Ensembl extends ClpGroup {
-    override val name: String = "Ensembl"
-    override val description: String = "Tools for downloading and formatting Ensembl data."
+  class _Util extends ClpGroup {
+    override val name: String = "Utilities"
+    override val description: String = "Utility programs."
   }
 
-  final val Ensembl  = classOf[_Ensembl]
   final val SamOrBam = classOf[_SamOrBam]
+  final val Util     = classOf[_Util]
 }

@@ -103,3 +103,54 @@ Prior Art
 
   * Disambiguate (https://github.com/AstraZeneca-NGS/disambiguate) from AstraZeneca's NGS team
 ```
+
+### IgvBoss
+
+#### Features
+
+- Will start IGV for you if it's not already running
+- Quick syntax to navigate IGV from the commandline only
+- Easily re-load new files, travel to loci, and swap genomes.
+- Shut IGV down with a single command `cvbio IgvBoss -x`
+
+#### Command Line Usage
+
+```console
+❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l <(cut -f4 < targets.bed | head -n2)
+```
+
+#### Long Tool Description
+
+```text
+IgvBoss
+------------------------------------------------------------------------------------------------------------------------
+Take control of your IGV session from end-to-end.
+
+IGV Startup
+-----------
+
+There are three supported ways to initialize IGV:
+
+  * Let this tool connect to an already-running IGV session
+  * Supply an IGV JAR file path and let this tool run it
+  * Let this tool find an 'igv' executable on the system PATH and run it
+
+This tool will always attempt to connect to a running IGV application before attempting to start a new instance of IGV.
+Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path is set, and
+there are no running instances of IGV, then this tool will attempt to fnd 'igv' on the system PATH and execute the
+application.
+
+You can shutdown IGV on exit with the '--close-on-exit' option. This will work regardless of how this tool initially
+connected to IGV and is handy for tearing down the application after your investigation is concluded.
+
+Controlling IGV
+---------------
+
+If no inputs are provided, then no new sessions will be created. Loci, for now, will result in a split-window view.
+
+References and Prior Art
+------------------------
+
+  * https://software.broadinstitute.org/software/igv/PortCommands
+  * https://github.com/stevekm/IGV-snapshot-automator
+```
