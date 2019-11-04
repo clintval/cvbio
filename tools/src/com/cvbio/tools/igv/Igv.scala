@@ -127,7 +127,7 @@ object Igv extends LazyLogging {
 
   /** Check to see if IGV is available. */
   def available(host: String = DefaultHost, port: Int = DefaultPort): Boolean = {
-    Try { new Socket(host, port).close() } isSuccess
+    Try { new Socket(host, port).close() }.isSuccess
   }
 
   /** Initialize the IGV application from a JAR file, if not already running.*/

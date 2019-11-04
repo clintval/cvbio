@@ -16,17 +16,14 @@ trait WithOptionalTrackName extends IgvCommand {
   override def toString: String = (Seq(simpleName) ++ trackName).mkString(" ")
 }
 
+/** Collapses a given <trackName>. A <trackName> is optional, and if it is not supplied all tracks are collapsed. */
+case class Collapse(trackName: Option[String] = None) extends WithOptionalTrackName
+
 /** Writes "echo" back to the response. Primarily used for testing. */
 case object Echo extends IgvCommand
 
 /** Exits by completely closing the IGV application. */
 case object Exit extends IgvCommand
-
-/** Creates a new session. Unloads all tracks except the default genome annotations. */
-case object New extends  IgvCommand
-
-/** Collapses a given <trackName>. A <trackName> is optional, and if it is not supplied all tracks are collapsed. */
-case class Collapse(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Expands a given <trackName>. A <trackName> is optional, and if it is not supplied all tracks are expanded. */
 case class Expand(trackName: Option[String] = None) extends WithOptionalTrackName
@@ -40,7 +37,7 @@ case class Genome(genome: String) extends IgvCommand {
 object Genome {
 
   /** Selects a genome (or indexed fasta) from the supplied path. */
-  def apply(genome: FilePath): Genome = new Genome(genome.toString)
+  def apply(genome: FilePath): Genome = new Genome(genome.toAbsolutePath.toString)
 }
 
 /** Scrolls to a single locus or sequence of loci. If a sequence is provided, these loci will be displayed in a split
@@ -52,6 +49,9 @@ case class Goto(locus: Seq[String]) extends IgvCommand {
 
 /** Companion object to [[Goto]]. */
  object Goto {
+
+  /** Go to a single locus. */
+  def apply(locus: String): Goto = Goto(Seq(locus))
 
   /** Go to a locatable. */
   def apply[T <: Locatable](locatable: T): Goto = {
@@ -84,6 +84,9 @@ case class Region[T <: Locatable](locatable: T) extends IgvCommand {
 case class MaxPanelHeight(height: Int) extends IgvCommand {
   override def toString: String = Seq(simpleName, height).mkString(" ")
 }
+
+/** Creates a new session. Unloads all tracks except the default genome annotations. */
+case object New extends IgvCommand
 
 /** Set to a log-scale or not. */
 case class SetLogScale(underlying: Boolean) extends AnyRef with IgvCommand {
@@ -121,7 +124,7 @@ case class Sort(option: String, locus: String) extends IgvCommand {
 case class Squish(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Set the display mode for an alignment track to "View as pairs". A <trackName> is optional. */
-case class ViewAsPairs(trackName: Option[String]) extends WithOptionalTrackName
+case class ViewAsPairs(trackName: Option[String] = None) extends WithOptionalTrackName
 
 /** Temporarily set the preference named <key> to the specified <value>. This preference only lasts until IGV is
   * shut-down.
