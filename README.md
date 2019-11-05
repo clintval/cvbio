@@ -126,10 +126,14 @@ IgvBoss
 ------------------------------------------------------------------------------------------------------------------------
 Take control of your IGV session from end-to-end.
 
+If no inputs are provided, then no new sessions will be created. Adding multiple IGV-valid locus identifiers will
+result in a split-window view. You must have already configured your IGV application to allow HTTPS connections over a
+port. Enable remote control through the Advanced Tab of the Preferences Window in IGV.
+
 IGV Startup
 -----------
 
-There are three supported ways to initialize IGV:
+There are three ways to initialize IGV:
 
   * Let this tool connect to an already-running IGV session
   * Supply an IGV JAR file path and let this tool run it
@@ -143,14 +147,10 @@ application.
 You can shutdown IGV on exit with the '--close-on-exit' option. This will work regardless of how this tool initially
 connected to IGV and is handy for tearing down the application after your investigation is concluded.
 
-Controlling IGV
----------------
-
-If no inputs are provided, then no new sessions will be created. Loci, for now, will result in a split-window view.
-
 References and Prior Art
 ------------------------
 
+  * https://github.com/igvteam/igv/blob/master/src/main/resources/org/broad/igv/prefs/preferences.tab
   * https://software.broadinstitute.org/software/igv/PortCommands
   * https://github.com/stevekm/IGV-snapshot-automator
 ```
