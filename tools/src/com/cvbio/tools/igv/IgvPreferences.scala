@@ -8,10 +8,13 @@ object IgvPreferences {
 
     // Track Display Options ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /** The preference to show the alignment track or not. */
     val ShowAlignmentTrack: String = "SAM.SHOW_ALIGNMENT_TRACK"
 
+    /** The preference to show the coverage track or not. */
     val ShowCoverageTrack: String = "SAM.SHOW_COV_TRACK"
 
+    /** The preference to show the junction track or not. */
     val ShowJunctionTrack: String = "SAM.SHOW_JUNCTION_TRACK"
 
     // Downsampling ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,8 +30,10 @@ object IgvPreferences {
 
     // Alignment Track Options /////////////////////////////////////////////////////////////////////////////////////////
 
+    /** The maximum base quality to shade. */
     val MaximumBaseQualityToShade: String = "SAM.BASE_QUALITY_MAX"
 
+    /** The minimum base quality to shade. */
     val MinimumBaseQualityToShade: String = "SAM.BASE_QUALITY_MIN"
   }
 }
