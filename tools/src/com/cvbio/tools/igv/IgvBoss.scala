@@ -2,7 +2,8 @@ package com.cvbio.tools.igv
 
 import com.cvbio.commons.CommonsDef._
 import com.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.cvbio.tools.igv.Igv.{DefaultHost, DefaultPort, DefaultMemory, Executable}
+import com.cvbio.tools.igv.Igv.{DefaultHost, DefaultMemory, DefaultPort, Executable}
+import com.cvbio.tools.igv.IgvPreferences._
 import com.fulcrumgenomics.sopt._
 
 import scala.collection.mutable.ListBuffer
@@ -12,9 +13,13 @@ import scala.collection.mutable.ListBuffer
     """
       |Take control of your IGV session from end-to-end.
       |
-      |### IGV Startup
+      |If no inputs are provided, then no new sessions will be created. Adding multiple IGV-valid locus identifiers will
+      |result in a split-window view. You must have already configured your IGV application to allow HTTPS connections
+      |over a port. Enable remote control through the Advanced Tab of the Preferences Window in IGV.
       |
-      |There are three supported ways to initialize IGV:
+      |## IGV Startup
+      |
+      |There are three ways to initialize IGV:
       |
       |  - Let this tool connect to an already-running IGV session
       |  - Supply an IGV JAR file path and let this tool run it
@@ -28,13 +33,9 @@ import scala.collection.mutable.ListBuffer
       |You can shutdown IGV on exit with the `--close-on-exit` option. This will work regardless of how this tool
       |initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
       |
-      |### Controlling IGV
-      |
-      |If no inputs are provided, then no new sessions will be created. Loci, for now, will result in a split-window
-      |view.
-      |
       |## References and Prior Art
       |
+      |  - https://github.com/igvteam/igv/blob/master/src/main/resources/org/broad/igv/prefs/preferences.tab
       |  - https://software.broadinstitute.org/software/igv/PortCommands
       |  - https://github.com/stevekm/IGV-snapshot-automator
     """,
@@ -49,7 +50,10 @@ import scala.collection.mutable.ListBuffer
   @arg(flag = 'm', doc = "The memory (in gigabytes) given to the JVM, if we are to initialize IGV.") val memory: Int = DefaultMemory,
   @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = DefaultHost,
   @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = DefaultPort,
-  @arg(flag = 'x', doc = "Close the IGV application after execution") val closeOnExit: Boolean = false,
+  @arg(flag = 'x', doc = "Close the IGV application after execution.") val closeOnExit: Boolean = false,
+  @arg(doc = "Downsample reads.") val downsample: Option[Boolean] = None,
+  @arg(doc = "Minimum base quality to shade.") val baseQualityMinimum: Option[Int] = None,
+  @arg(doc = "Maximum base quality to shade.") val baseQualityMaximum: Option[Int] = None
 ) extends CvBioTool {
 
   /** Run the tool [[IgvBoss]]. */
@@ -57,6 +61,10 @@ import scala.collection.mutable.ListBuffer
     val commands = new ListBuffer[IgvCommand]()
 
     genome.foreach(g => commands += Genome(g))
+
+    downsample.foreach(value => commands += Preference(Sam.DownsampleReads, value))
+    baseQualityMinimum.foreach(value => commands += Preference(Sam.MinimumBaseQualityToShade, value))
+    baseQualityMaximum.foreach(value => commands += Preference(Sam.MaximumBaseQualityToShade, value))
 
     if (input.nonEmpty) { commands += New += Load(input) }
     if (loci.nonEmpty)  { commands += Goto(loci) }

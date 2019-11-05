@@ -132,3 +132,10 @@ case class ViewAsPairs(trackName: Option[String] = None) extends WithOptionalTra
 case class Preference(key: String, value: String) extends IgvCommand {
   override def toString: String = Seq(simpleName, key, value).mkString(" ")
 }
+
+/** Companion object for [[Preference]]. */
+object Preference {
+
+  /** Build a preference command from anything. */
+  def apply(key: String, value: Any): Preference = new Preference(key, value.toString)
+}
