@@ -4,7 +4,7 @@ import com.cvbio.commons.CommonsDef._
 import com.cvbio.pipeline.cmdline.ClpGroups
 import com.cvbio.pipeline.tasks.misc.MoveBam
 import com.cvbio.pipeline.tasks.star.StarAlign
-import com.cvbio.pipeline.tasks.star.StarAlign.TwoPassMode
+import com.cvbio.pipeline.tasks.star.StarAlign.{IntronMotifFilter, IntronStrandFilter, OutputFilterType, TwoPassMode}
 import com.fulcrumgenomics.bam.api.SamSource
 import com.fulcrumgenomics.commons.io.{Io, PathUtil}
 import com.fulcrumgenomics.sopt.{arg, clp}
@@ -25,6 +25,17 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
   @arg(flag = 'p', doc = "The output prefix (e.g. /path/to/sample1)") val prefix: PathPrefix,
   @arg(flag = 'r', doc = "The reference genome.") val ref: Option[PathToFasta] = None,
   @arg(flag = 'M', doc = "The two-pass mode to use.") val twoPass: Option[TwoPassMode] = None,
+  // Output Filter Options
+  @arg(doc = "The output filter type.") val outputFilterType: OutputFilterType = OutputFilterType.Normal,
+  @arg(doc = "The maximum mismatches per read pair.") val maxMismatchesPerPair: Option[Int] = None,
+  @arg(doc = "The maximum mismatches per read length ratio.") val maxMismatchesPerReadLength: Option[Double] = None,
+  @arg(doc = "The intron motif filter.") val intronMotifFilter: Option[IntronMotifFilter] = None,
+  @arg(doc = "The intron strand filter.") val intronStrandFilter: Option[IntronStrandFilter] = Some(IntronStrandFilter.RemoveInconsistentStrands),
+  // Align Options
+  @arg(doc = "The minimum intron length.") val minimumIntronLength: Option[Int] = None,
+  @arg(doc = "The maximum intron length.") val maximumIntronLength: Option[Int] = None,
+  @arg(doc = "The maximum mate span.") val maximumMateSpan: Option[Int] = None,
+  // Runtime resources
   @arg(doc = "The number of cores to use.") val cores: Cores = StarAlign.DefaultCores
 ) extends Pipeline(outputDirectory = Some(prefix.getParent)) {
 
@@ -53,17 +64,25 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
     val prepare   = new MakeDirectory(outputPrefix.getParent)
     val makeFastq = new SamToFastq(in = input, fastq1 = read1, fastq2 = Some(read2), interleave = false)
     val align     = new StarAlign(
-      read1        = read1,
-      read2        = Some(read2),
-      genomeDir    = genomeDir,
-      prefix       = Some(outputPrefix),
-      id           = id,
-      sampleName   = sampleName,
-      library      = library,
-      platform     = platform,
-      platformUnit = platformUnit,
-      twoPass      = twoPass,
-      cores        = cores
+      read1                      = read1,
+      read2                      = Some(read2),
+      genomeDir                  = genomeDir,
+      prefix                     = Some(outputPrefix),
+      id                         = id,
+      sampleName                 = sampleName,
+      library                    = library,
+      platform                   = platform,
+      platformUnit               = platformUnit,
+      twoPass                    = twoPass,
+      outputFilterType           = outputFilterType,
+      maxMismatchesPerPair       = maxMismatchesPerPair,
+      maxMismatchesPerReadLength = maxMismatchesPerReadLength,
+      intronMotifFilter          = intronMotifFilter,
+      intronStrandFilter         = intronStrandFilter,
+      minimumIntronLength        = minimumIntronLength,
+      maximumIntronLength        = maximumIntronLength,
+      maximumMateSpan            = maximumMateSpan,
+      cores                      = cores
     )
 
     val postProcess = ref match {
