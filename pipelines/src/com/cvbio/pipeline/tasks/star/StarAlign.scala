@@ -24,26 +24,22 @@ class StarAlign(
   genomeDir: DirPath,
   prefix: Option[PathPrefix] = None,
   twoPass: Option[StarAlign.TwoPassMode] = None,
-
   // Sample metadata.
   id: Option[String] = None,
   sampleName: Option[String] = None,
   library: Option[String] = None,
   platform: Option[String] = None,
   platformUnit: Option[String] = None,
-
   // Output Filtering Options
   outputFilterType: OutputFilterType = OutputFilterType.Normal,
   maxMismatchesPerPair: Option[Int] = None,
   maxMismatchesPerReadLength: Option[Double] = None,
-  intronMotifFilter: IntronMotifFilter = IntronMotifFilter.None,
-  intronStrandFilter: IntronStrandFilter = IntronStrandFilter.RemoveInconsistentStrands,
-
+  intronMotifFilter: Option[IntronMotifFilter] = None,
+  intronStrandFilter: Option[IntronStrandFilter] = Some(IntronStrandFilter.RemoveInconsistentStrands),
   // Align Options
   minimumIntronLength: Option[Int] = None,
   maximumIntronLength: Option[Int] = None,
   maximumMateSpan: Option[Int] = None,
-
   // Runtime Options
   cores: Cores = StarAlign.DefaultCores
 ) extends ProcessTask with FixedResources {
@@ -60,29 +56,30 @@ class StarAlign(
     val buffer = ListBuffer[Any]()
 
     buffer.append(Star.findStar)
-    buffer.append("--runThreadN", resources.cores.toInt)
     buffer.append("--runMode", "alignReads")
     buffer.append(Seq("--readFilesIn") ++ readFiles: _*)
     buffer.append("--genomeDir", genomeDir)
     prefix.foreach(buffer.append("--outFileNamePrefix", _))
-    twoPass.foreach(buffer.append("--twoPassMode", _))
-    id.foreach(_ => buffer.append(Seq("--outSAMattrRGline") ++ readGroupLine: _*))
     buffer.append("--outSAMattributes", "All")
     buffer.append("--outSAMmode", "Full")
     buffer.append("--outSAMprimaryFlag", "OneBestScore")
     buffer.append("--outSAMtype", "BAM", "SortedByCoordinate")
     buffer.append("--outSAMunmapped", "Within", "KeepPairs")
-
+    twoPass.foreach(buffer.append("--twoPassMode", _))
+    // Sample metadata
+    id.foreach(_ => buffer.append(Seq("--outSAMattrRGline") ++ readGroupLine: _*))
+    // Output Filtering Options
+    buffer.append("--outFilterType", outputFilterType)
+    maxMismatchesPerPair.foreach(m => buffer.append("--outFilterMismatchNmax", m))
+    maxMismatchesPerReadLength.foreach(m => buffer.append("--outFilterMismatchNoverReadLmax", m))
+    intronMotifFilter.foreach(f => buffer.append("--outFilterIntronMotifs", f))
+    intronStrandFilter.foreach(f => buffer.append("--outFilterIntronStrands", f))
     // Alignment options
     minimumIntronLength.foreach(l => buffer.append("--alignIntronMin", l))
     maximumIntronLength.foreach(l => buffer.append("--alignIntronMax", l))
     maximumMateSpan.foreach(s => buffer.append("--alignMatesGapMax", s))
-
-    // Output Filtering Options
-    buffer.append("--outFilterType", outputFilterType)
-    buffer.append("--outFilterMismatchNmax", maxMismatchesPerPair)
-    maxMismatchesPerReadLength.foreach(m => buffer.append("--outFilterMismatchNoverReadLmax", m))
-    buffer.append("--outFilterIntronStrands", intronStrandFilter)
+    // Runtime options
+    buffer.append("--runThreadN", resources.cores.toInt)
 
     buffer
   }
@@ -189,9 +186,6 @@ object StarAlign {
 
     def values: scala.collection.immutable.IndexedSeq[IntronMotifFilter] = findValues
 
-    /** The value when [[IntronMotifFilter]] is no filtering. */
-    case object None extends IntronMotifFilter
-
     /** The value when [[IntronMotifFilter]] is to filter out alignments that contain non-canonical junctions. */
     case object RemoveNonCanonical extends IntronMotifFilter
 
@@ -208,9 +202,6 @@ object StarAlign {
   object IntronStrandFilter extends FgBioEnum[IntronStrandFilter] {
 
     def values: scala.collection.immutable.IndexedSeq[IntronStrandFilter] = findValues
-
-    /** The value when [[IntronStrandFilter]] is no filtering. */
-    case object None extends IntronStrandFilter
 
     /** The value when [[IntronStrandFilter]] is to remove alignments that have junctions with inconsistent strands. */
     case object RemoveInconsistentStrands extends IntronStrandFilter
@@ -238,9 +229,6 @@ object StarAlign {
   object TwoPassMode extends FgBioEnum[TwoPassMode] {
 
     def values: scala.collection.immutable.IndexedSeq[TwoPassMode] = findValues
-
-    /** The value when [[TwoPassMode]] is no two pass. */
-    case object None extends TwoPassMode
 
     /** The value when [[TwoPassMode]] is a basic two pass mode. */
     case object Basic extends TwoPassMode

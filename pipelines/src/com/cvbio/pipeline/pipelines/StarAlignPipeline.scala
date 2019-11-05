@@ -29,8 +29,8 @@ import dagr.tasks.picard.{BuildBamIndex, MergeBamAlignment, SamToFastq, Validate
   @arg(doc = "The output filter type.") val outputFilterType: OutputFilterType = OutputFilterType.Normal,
   @arg(doc = "The maximum mismatches per read pair.") val maxMismatchesPerPair: Option[Int] = None,
   @arg(doc = "The maximum mismatches per read length ratio.") val maxMismatchesPerReadLength: Option[Double] = None,
-  @arg(doc = "The intron motif filter.") val intronMotifFilter: IntronMotifFilter = IntronMotifFilter.None,
-  @arg(doc = "The intron strand filter.") val intronStrandFilter: IntronStrandFilter = IntronStrandFilter.RemoveInconsistentStrands,
+  @arg(doc = "The intron motif filter.") val intronMotifFilter: Option[IntronMotifFilter] = None,
+  @arg(doc = "The intron strand filter.") val intronStrandFilter: Option[IntronStrandFilter] = Some(IntronStrandFilter.RemoveInconsistentStrands),
   // Align Options
   @arg(doc = "The minimum intron length.") val minimumIntronLength: Option[Int] = None,
   @arg(doc = "The maximum intron length.") val maximumIntronLength: Option[Int] = None,
