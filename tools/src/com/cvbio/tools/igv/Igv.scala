@@ -19,7 +19,7 @@ import scala.util.Try
   *
   * {{{
   *   scala> val igv = new Igv("127.0.0.1", 60151)
-  *   scala> igv.available
+  *   scala> igv.ready
   *   true
   *   scala> igv.exec(Echo)
   *   [2019/10/13 22:52:12 | Igv | Info] Executing: echo
