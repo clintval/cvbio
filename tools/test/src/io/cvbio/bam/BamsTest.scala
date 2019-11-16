@@ -10,7 +10,7 @@ import io.cvbio.testing.{TemplateBuilder, UnitSpec}
 
 class BamsTest extends UnitSpec {
 
-  "Bams.TemplateUtil" should "provide easy to all read tags across a read ordinal" in {
+  "Bams.TemplateUtil" should "provide easy access to all read tags across a read ordinal" in {
     import io.cvbio.bam.Bams.TemplateUtil
 
     val builder = new TemplateBuilder(name = "test")

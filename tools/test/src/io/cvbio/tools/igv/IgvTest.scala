@@ -1,12 +1,17 @@
 package io.cvbio.tools.igv
 
+import com.fulcrumgenomics.commons.util.CaptureSystemStreams
 import io.cvbio.testing.UnitSpec
 import io.cvbio.tools.igv.Igv.OutputFormat
 
-class IgvTest extends UnitSpec {
+class IgvTest extends UnitSpec with CaptureSystemStreams {
 
   "Igv" should "fail to launch with a bogus host and port" in {
-    an[IllegalArgumentException] should be thrownBy { new Igv("a-nothing-host", 200) }
+    captureLogger { () =>
+      an[IllegalArgumentException] should be thrownBy {
+        new Igv("a-nothing-host", 200)
+      }
+    }
   }
 
   "Igv.available" should "return false for a bogus host and port" in {
