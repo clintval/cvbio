@@ -1,4 +1,4 @@
-package com.cvbio.tools.igv
+package io.cvbio.tools.igv
 
 /** Preference keys for IGV. */
 object IgvPreferences {

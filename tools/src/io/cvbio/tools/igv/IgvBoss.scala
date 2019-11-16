@@ -3,7 +3,7 @@ package io.cvbio.tools.igv
 import io.cvbio.commons.CommonsDef._
 import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import io.cvbio.tools.igv.Igv.{DefaultHost, DefaultMemory, DefaultPort, Executable}
-import com.cvbio.tools.igv.IgvPreferences._
+import io.cvbio.tools.igv.IgvPreferences._
 import com.fulcrumgenomics.sopt._
 
 import scala.collection.mutable.ListBuffer
