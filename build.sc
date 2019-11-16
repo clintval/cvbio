@@ -8,8 +8,9 @@ import mill.api.Loose
 import mill.define.{Input, Target}
 import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
+import mill.scalalib.publish.{License, PomSettings, _}
 
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 private val dagrCoreVersion     = "1.1.0-a0a77fb-SNAPSHOT"
 private val fgbioCommonsVersion = "1.1.0-f1f68f5-SNAPSHOT"
@@ -18,7 +19,7 @@ private val fgbioVersion        = "1.1.0-2100905-SNAPSHOT"
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
 /** A base trait for versioning modules. */
-trait ReleaseModule extends JavaModule {
+trait ReleaseModule extends PublishModule {
 
   /** Execute Git arguments and return the standard output. */
   private def git(args: String*): String = %%("git", args)(pwd).out.string.trim
@@ -59,6 +60,20 @@ trait ReleaseModule extends JavaModule {
 
   /** The JAR manifest. */
   override def manifest = T { super.manifest().add(ImplementationVersion.toString -> implementationVersion()) }
+
+
+  /** The publish version. Currently set to the implementation version. */
+  override def publishVersion: T[String] = implementationVersion
+
+  /** POM Settings. */
+  override def pomSettings: T[PomSettings] = PomSettings(
+    description    = "Artisanal bioinformatics tools and pipelines in Scala",
+    organization   = "io.cvbio",
+    url            = "https://github.com/clintval/cvbio",
+    licenses       = Seq(License.MIT),
+    versionControl = VersionControl.github("clintval", "cvbio"),
+    developers     = Seq(Developer("clintval", "Clint Valentine", "https://github.com/clintval"))
+  )
 }
 
 /** The common module mixin for all of our projects. */
@@ -91,8 +106,8 @@ trait ScalaTest extends TestModule {
 /** The commons project. */
 object commons extends CommonModule {
 
-  /** The current short Git hash. */
-  def gitHash: String = %%("git", "rev-parse", "--short", "HEAD")(pwd).out.string.trim
+  /** The artifact name. */
+  override def artifactName: T[String] = "commons"
 
   /** Scala compiler options. */
   override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation", "-feature")
@@ -119,6 +134,9 @@ object commons extends CommonModule {
 /** The pipelines project. */
 object pipelines extends CommonModule {
 
+  /** The artifact name. */
+  override def artifactName: T[String] = "cvbio-pipelines"
+
   /** Ivy dependencies. */
   override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
     ivy"com.fulcrumgenomics::dagr-core::$dagrCoreVersion",
@@ -139,6 +157,9 @@ object pipelines extends CommonModule {
 
 /** The tools project. */
 object tools extends CommonModule {
+
+  /** The artifact name. */
+  override def artifactName: T[String] = "tools"
 
   /** Ivy dependencies. */
   override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
