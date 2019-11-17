@@ -28,6 +28,9 @@ object CommonsDef extends FgBioCommonsDef {
   /** The short version of the FASTQ file extension. */
   val FqExtension: FilenameSuffix = fq.getExtension
 
+  /** Text file extension. */
+  val TextExtension: FilenameSuffix = ".txt"
+
   /** Implicits for self returning side-effecting code.
     *
     * @param self The collection to tap
