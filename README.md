@@ -34,7 +34,21 @@ Install with the Conda package manager after setting up your [Bioconda channels]
 
 ---
 
-### Disambiguate
+## Disambiguate
+
+Disambiguate reads that were mapped to multiple references.
+
+Disambiguation of aligned reads is performed per-template and all information across primary, secondary, and supplementary alignments is used as evidence.
+Alignment disambiguation is commonly used when analyzing sequencing data from transduction, transfection, transgenic, or xenographic (including patient derived xenograft) experiments.
+This tool works by comparing various alignment scores between a template that has been aligned to many references in order to determine which reference is the most likely source.
+
+All templates which are positively assigned to a single source reference are written to a reference-specific output BAM file.
+Any templates with ambiguous reference assignment are written to an ambiguous input-specific output BAM file.
+Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
+
+Input BAMs of arbitrary sort order are accepted, however, an internal sort to queryname will be performed unless the BAM is already in queryname sort order.
+All output BAM files will be written in the same sort order as the input BAM files.
+Although paired-end reads will give the most discriminatory power for disambiguation of short-read sequencing data, this tool accepts paired, single-end (fragment), and mixed pairing input data.
 
 #### Features
 
@@ -50,61 +64,48 @@ Install with the Conda package manager after setting up your [Bioconda channels]
 ❯ cvbio Disambiguate -i infile1.bam infile2.bam -p insilico/disambiguated
 ```
 
-#### Long Tool Description
-
-```text
-Disambiguate
-------------------------------------------------------------------------------------------------------------------------
-Disambiguate reads that were mapped to multiple references.
-
-Disambiguation of aligned reads is performed per-template and all information across primary, secondary, and
-supplementary alignments is used as evidence. Alignment disambiguation is commonly used when analyzing sequencing data
-from transduction, transfection, transgenic, or xenographic (including patient derived xenograft) experiments. This
-tool works by comparing various alignment scores between a template that has been aligned to many references in order
-to determine which reference is the most likely source.
-
-All templates which are positively assigned to a single source reference are written to a reference-specific output BAM
-file. Any templates with ambiguous reference assignment are written to an ambiguous input-specific output BAM file.
-Only BAMs produced from the Burrows-Wheeler Aligner (bwa) or STAR are currently supported.
-
-Input BAMs of arbitrary sort order are accepted, however, an internal sort to queryname will be performed unless the
-BAM is already in queryname sort order. All output BAM files will be written in the same sort order as the input BAM
-files. Although paired-end reads will give the most discriminatory power for disambiguation of short- read sequencing
-data, this tool accepts paired, single-end (fragment), and mixed pairing input data.
-
-Example
--------
+#### Example
 
 To disambiguate templates that are aligned to human (A) and mouse (B):
 
-  ❯ java -jar cvbio.jar Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
+```
+❯ java -jar cvbio.jar Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
 
-  ❯ tree sample/
-    sample/
-    ├── ambiguous-alignments/
-    │  ├── sample.A.ambiguous.bai
-    │  ├── sample.A.ambiguous.bam
-    │  ├── sample.B.ambiguous.bai
-    │  └── sample.B.ambiguous.bam
-    ├── sample.hg38.bai
-    ├── sample.hg38.bam
-    ├── sample.mm10.bai
-    └── sample.mm10.bam
-
-Glossary
---------
-
-  * MAPQ: A metric that tells you how confident you can be that a read comes from a reported mapping position.
-  * AS: A metric that tells you how similar the read is to the reference sequence.
-  * NM: A metric that measures the number of mismatches to the reference sequence (Hamming distance).
-
-Prior Art
----------
-
-  * Disambiguate (https://github.com/AstraZeneca-NGS/disambiguate) from AstraZeneca's NGS team
+❯ tree sample/
+  sample/
+  ├── ambiguous-alignments/
+  │  ├── sample.A.ambiguous.bai
+  │  ├── sample.A.ambiguous.bam
+  │  ├── sample.B.ambiguous.bai
+  │  └── sample.B.ambiguous.bam
+  ├── sample.hg38.bai
+  ├── sample.hg38.bam
+  ├── sample.mm10.bai
+  └── sample.mm10.bam
 ```
 
-### IgvBoss
+## IgvBoss
+
+Take control of your IGV session from end-to-end.
+
+If no inputs are provided, then no new sessions will be created.
+Adding multiple IGV-valid locus identifiers will result in a split-window view.
+You must have already configured your IGV application to allow HTTPS connections over a port.
+Enable remote control through the Advanced Tab of the Preferences Window in IGV.
+
+There are three ways to initialize IGV:
+
+  * Let this tool connect to an already-running IGV session
+  * Supply an IGV JAR file path and let this tool run it
+  * Let this tool find an `igv` executable on the system PATH and run it
+
+This tool will always attempt to connect to a running IGV application before attempting to start a new instance of IGV.
+Provide a path to an IGV JAR file if no IGV applications are currently running.
+If no IGV JAR file path is set, and there are no running instances of IGV, then this tool will attempt to fnd 'igv' on the system PATH and execute the application.
+
+You can shutdown IGV on exit with the '--close-on-exit' option.
+This will work regardless of how this tool initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
+
 
 #### Features
 
@@ -115,42 +116,9 @@ Prior Art
 
 #### Command Line Usage
 
+Load a BAM and interval list file into a new IGV session against the `mm10` on-disk genome.
+Then go to two loci by name that are referenced in the first two name fields of the interval list.
+
 ```console
 ❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l $(cut -f4 < targets.bed | head -n2)
-```
-
-#### Long Tool Description
-
-```text
-IgvBoss
-------------------------------------------------------------------------------------------------------------------------
-Take control of your IGV session from end-to-end.
-
-If no inputs are provided, then no new sessions will be created. Adding multiple IGV-valid locus identifiers will
-result in a split-window view. You must have already configured your IGV application to allow HTTPS connections over a
-port. Enable remote control through the Advanced Tab of the Preferences Window in IGV.
-
-IGV Startup
------------
-
-There are three ways to initialize IGV:
-
-  * Let this tool connect to an already-running IGV session
-  * Supply an IGV JAR file path and let this tool run it
-  * Let this tool find an 'igv' executable on the system PATH and run it
-
-This tool will always attempt to connect to a running IGV application before attempting to start a new instance of IGV.
-Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path is set, and
-there are no running instances of IGV, then this tool will attempt to fnd 'igv' on the system PATH and execute the
-application.
-
-You can shutdown IGV on exit with the '--close-on-exit' option. This will work regardless of how this tool initially
-connected to IGV and is handy for tearing down the application after your investigation is concluded.
-
-References and Prior Art
-------------------------
-
-  * https://github.com/igvteam/igv/blob/master/src/main/resources/org/broad/igv/prefs/preferences.tab
-  * https://software.broadinstitute.org/software/igv/PortCommands
-  * https://github.com/stevekm/IGV-snapshot-automator
 ```
