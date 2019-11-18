@@ -103,7 +103,7 @@ This tool will always attempt to connect to a running IGV application before att
 Provide a path to an IGV JAR file if no IGV applications are currently running.
 If no IGV JAR file path is set, and there are no running instances of IGV, then this tool will attempt to fnd 'igv' on the system PATH and execute the application.
 
-You can shutdown IGV on exit with the '--close-on-exit' option.
+You can shutdown IGV on exit with the `--close-on-exit` option.
 This will work regardless of how this tool initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
 
 
