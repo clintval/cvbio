@@ -5,6 +5,8 @@ import com.fulcrumgenomics.commons.{CommonsDef => FgBioCommonsDef}
 import htsjdk.samtools.fastq.FastqConstants.FastqExtensions.{FASTQ => fastq, FQ => fq}
 import htsjdk.samtools.util.FileExtensions
 
+import scala.collection.mutable.ListBuffer
+
 object CommonsDef extends FgBioCommonsDef {
 
   /** The extension of BAM index files. */
@@ -44,6 +46,19 @@ object CommonsDef extends FgBioCommonsDef {
 
   /** Insert a separating item after every item. */
   def interleave[T](sep: T): Seq[T] => Seq[T] = (seq: Seq[T]) => seq.flatMap(Seq(_, sep))
+
+  /** Patch many indexes within a sequence using the function <using>. */
+  def patchManyWith[A](from: Seq[A], at: Seq[Int], using: A => A): Seq[A] = {
+    val b  = new ListBuffer[A]()
+    val it = from.iterator
+    var i  = 0
+    while (it.hasNext) {
+      if (at.contains(i)) b += using(it.next())
+      else                b += it.next()
+      i += 1
+    }
+    b
+  }
 
   /** Return the path to a BAM index file of the form `<filename>.bai` */
   def bai(path: PathToBam): PathToBai = PathUtil.replaceExtension(path, BaiExtension)

@@ -28,4 +28,25 @@ class CommonsDefTest extends UnitSpec {
     val coll: Seq[String] = Seq("1", "2", "3")
     interleave(sep = "\n")(coll).mkString("") shouldBe (coll.mkString("\n") + "\n")
   }
+
+  "CommonsDef.patchManyWith" should "patch in known items within a collection using a simple function" in {
+    val original = Seq(1, 2 ,3, 4)
+    val expected = Seq(4, 4, 3, 4)
+    val actual   = patchManyWith[Int](original, Seq(0, 1), _ => 4)
+    actual shouldBe expected
+  }
+
+  "CommonsDef.patchManyWith" should "patch in known items within a collection using a lookup function" in {
+    val original = Seq(1, 2 ,3, 4)
+    val expected = Seq(2, 3, 4, 5)
+    val lookup   = Map[Int, Int](1 -> 2, 2 -> 3, 3 -> 4, 4 -> 5)
+    val actual   = patchManyWith[Int](original, Seq(0, 1, 2, 3), lookup)
+    actual shouldBe expected
+  }
+
+  "CommonsDef.patchManyWith" should "ignore indexes that don't actually exist" in {
+    val original = Seq(1, 2 ,3, 4)
+    val actual   = patchManyWith[Int](original, Seq(-1, 4), _ => 4)
+    actual shouldBe original
+  }
 }

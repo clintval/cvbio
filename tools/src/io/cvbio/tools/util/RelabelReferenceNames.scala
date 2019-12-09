@@ -5,9 +5,11 @@ import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.util.Io
 import io.cvbio.commons.CommonsDef._
 import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import io.cvbio.tools.util.RelabelReferenceNames.{DefaultDelimiter, SkipLinePrefixes}
+import io.cvbio.tools.util.RelabelReferenceNames.{DefaultDelimiter, SkipLinePrefixes, relabel}
 
+import scala.collection.mutable.ListBuffer
 import scala.util.Properties.lineSeparator
+import scala.util.{Failure, Success, Try}
 
 @clp(
   description =
@@ -37,21 +39,16 @@ import scala.util.Properties.lineSeparator
     val lookup = RelabelReferenceNames.buildMapping(mappingFile, delimiter = DefaultDelimiter)
 
     source.getLines.zipWithIndex.foreach { case (line: String, lineNumber: Int) =>
-      val fields  = line.split(delimiter)
-      val contigs = columns.map(fields)
-
       if (skipPrefix.exists(line.startsWith)) {
-        writer.write(line)
-      } else if (drop && !contigs.forall(lookup.keysIterator.contains)) {
-        logger.info(s"Dropping record ${lineNumber + 1} as at least one field did not have a mapping: $line.")
+        writer.write(line + lineSeparator)
       } else {
-        columns
-          .zip(contigs)
-          .filter(pair => lookup.keysIterator.contains(pair._2))
-          .foreach(pair => fields.update(pair._1, lookup(pair._2)))
-        writer.write(fields.mkString(delimiter.toString))
+        Try(relabel(line, columns, delimiter, lookup)) match {
+          case Success(patched) => writer.write(patched.mkString(delimiter.toString) + lineSeparator)
+          case Failure(_: NoSuchElementException) if drop => {
+            logger.info(s"Dropping record ${lineNumber + 1} as at least one field did not have a mapping: $line.")
+          }
+        }
       }
-      writer.write(lineSeparator)
     }
   }
 }
@@ -66,13 +63,19 @@ object RelabelReferenceNames {
   val SkipLinePrefixes: Seq[String] = Seq("#")
 
   /** Build a reference sequence name mapping. */
-  private def buildMapping(lines: Iterator[String], delimiter: Char = DefaultDelimiter): Map[String, String] = {
+  private[util] def buildMapping(lines: Iterator[String], delimiter: Char = DefaultDelimiter): Map[String, String] = {
     val rows = new DelimitedDataParser(lines, delimiter = delimiter, header = Seq("1", "2"))
     rows.map { row => row[String](index = 0) -> row[String](index = 1) }.toMap
   }
 
   /** Build a reference sequence name mapping. */
-  private def buildMapping(file: FilePath, delimiter: Char): Map[String, String] = {
+  private[util] def buildMapping(file: FilePath, delimiter: Char): Map[String, String] = {
     buildMapping(Io.toSource(file).getLines(), delimiter = delimiter)
+  }
+
+  /** Relabel a line of delimited data using the function <using> for each index in <at>. */
+  private[util] def relabel(line: String, at: Seq[Int], delimiter: Char = DefaultDelimiter, using: String => String): String = {
+    val patched = patchManyWith(line.split(delimiter), at, using)
+    patched.mkString(delimiter.toString)
   }
 }
