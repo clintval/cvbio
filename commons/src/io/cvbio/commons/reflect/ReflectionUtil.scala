@@ -6,10 +6,12 @@ import io.cvbio.commons.CommonsDef._
 
 import scala.io.Source
 
+import scala.util.Properties.isLinux
+
 object ReflectionUtil {
 
   /** List all the resources in the code source where this class is found. */
-  def resourceListing[T](clazz: Class[T]): Seq[String] = {
+  def resourceListing[T](clazz: Class[T]): Iterator[String] = {
     clazz.getProtectionDomain.getCodeSource.getLocation.toURI match {
       case loc if loc.getScheme == "file" && loc.toASCIIString.endsWith( ".jar") => {
         val entries  = new JarFile(loc.getPath).entries()
@@ -17,7 +19,7 @@ object ReflectionUtil {
           override def hasNext: Boolean = entries.hasMoreElements
           override def next(): String   = entries.nextElement().toString
         }
-        iterator.toList
+        iterator
       }
       case loc => throw new IllegalStateException(s"Unknown resource object: $loc")
     }

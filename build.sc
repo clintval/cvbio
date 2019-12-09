@@ -101,6 +101,11 @@ trait ScalaTest extends TestModule {
     ivy"org.scalamock::scalamock::4.4.0"
   )
   override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
+
+  /** Run a single test with `scalatest`. */
+  def testOne(args: String*) = T.command {
+    super.runMain("org.scalatest.run", args: _*)
+  }
 }
 
 /** The commons project. */
