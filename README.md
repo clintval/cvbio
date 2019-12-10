@@ -122,3 +122,36 @@ Then go to two loci by name that are referenced in the first two name fields of 
 ```console
 ❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l $(cut -f4 < targets.bed | head -n2)
 ```
+
+## RelabelReferenceNames
+
+Relabel reference sequence names in delimited data using a chromosome name mapping table.
+
+A collection of mapping tables is maintained at the following location:
+
+  * https://github.com/dpryan79/ChromosomeMappings
+
+#### Features
+
+- Optionally drop rows which have chromosome names not in the mapping file
+- Replace multiple fields in a row at once using the same mapping file
+- Directly write-out rows that startwith arbitrary strings (default of `#`)
+- Parses any delimited data using any single character delimiter
+
+#### Command Line Usage
+
+Relabel the chromosomes names in a human gene annotation file.
+
+```console
+❯ git clone https://github.com/dpryan79/ChromosomeMappings.git
+❯ wget -qO- ftp://ftp.ensembl.org/pub/release-96/gtf/homo_sapiens/Homo_sapiens.GRCh38.96.gtf.gz \
+    | gzip -dc > Homo_sapiens.GRCh38.96.gtf
+
+❯ cvbio RelabelReferenceNames \
+    -i Homo_sapiens.GRCh38.96.gtf \
+    -o Homo_sapiens.GRCh38.96.ensembl-named.gtf \
+    -m ChromosomeMappings/BDGP6_UCSC2ensembl.txt \
+    --skipPrefixes '#' \
+    --columns 0 \
+    --drop false
+```
