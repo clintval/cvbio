@@ -7,15 +7,16 @@
 [![Code Style][scalafmt-badge]][scalafmt-link]
 [![Releases][releases-badge]][releases-link]
 [![License][license-badge]][license-link]
+[![Anaconda Version][anaconda-badge]][bioconda-link]
 
-
+[anaconda-badge]: https://anaconda.org/bioconda/cvbio/badges/version.svg
 [bioconda-badge]: https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg
 [bioconda-link]:  http://bioconda.github.io/recipes/cvbio/README.html
 [codecov-badge]:  https://codecov.io/gh/clintval/cvbio/branch/master/graph/badge.svg
 [codecov-link]:   https://codecov.io/gh/clintval/cvbio
 [license-badge]:  https://img.shields.io/badge/license-MIT-blue.svg
 [license-link]:   https://github.com/clintval/cvbio/blob/master/LICENSE
-[releases-badge]: https://img.shields.io/badge/cvbio_Releases-555555.svg
+[releases-badge]: https://img.shields.io/badge/releases-555555.svg
 [releases-link]:  https://github.com/clintval/cvbio/releases
 [scala-badge]:    https://img.shields.io/badge/language-scala-c22d40.svg
 [scala-link]:     https://www.scala-lang.org/
