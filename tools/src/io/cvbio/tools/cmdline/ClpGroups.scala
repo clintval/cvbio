@@ -7,7 +7,7 @@ object ClpGroups {
 
   class _Deprecated extends ClpGroup {
     override val name: String = "Deprecated"
-    override val description: String = "These are provided for compatibility between major version upgrades."
+    override val description: String = "These tools are provided for compatibility between major version upgrades."
   }
 
   class _SamOrBam extends ClpGroup {

@@ -8,6 +8,8 @@ import io.cvbio.tools.cmdline.ClpGroups
 @clp(
   description =
     """
+      |Deprecated: Use `UpdateDataContigNames` instead.
+      |
       |Relabel reference sequence names in delimited data using a chromosome name mapping table.
       |
       |A collection of mapping tables is maintained at the following location:
