@@ -12,7 +12,7 @@ import scala.util.Properties.lineSeparator
 @clp(
   description =
     """
-      |Relabel reference sequence names using defined chromosome mapping tables.
+      |Relabel reference sequence names in delimited data using a chromosome name mapping table.
       |
       |A collection of mapping tables is maintained at the following location:
       |
@@ -23,7 +23,7 @@ import scala.util.Properties.lineSeparator
   @arg(flag = 'i', doc = "The input file.") val in: FilePath,
   @arg(flag = 'o', doc = "The output file.") val out: FilePath,
   @arg(flag = 'm', doc = "A two-column tab-delimited mapping file.") val mappingFile: FilePath,
-  @arg(flag = 'c', doc = "The column names to convert, 1-indexed.", minElements = 1) val columns: Seq[Int] = Seq(1),
+  @arg(flag = 'c', doc = "The column names to convert, 0-indexed.", minElements = 1) val columns: Seq[Int] = Seq(0),
   @arg(flag = 'd', doc = "The input file data delimiter.") val delimiter: Char = DefaultDelimiter,
   @arg(flag = 's', doc = "Directly write-out columns that start with these prefixes.") val skipPrefixes: Seq[String] = SkipLinePrefixes,
   @arg(flag = 'x', doc = "Drop records which do not have a mapping.") val drop: Boolean = true
@@ -47,6 +47,7 @@ import scala.util.Properties.lineSeparator
         } else if (drop && !isValid) {
           logger.info(s"A field in record ${i + 1} did not have a mapping: $line")
         } else {
+          println(fields)
           throw new NoSuchElementException(s"A field in record ${i + 1} did not have a mapping: $line")
         }
       }
