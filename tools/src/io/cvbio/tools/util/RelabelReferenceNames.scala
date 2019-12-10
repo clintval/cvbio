@@ -5,21 +5,18 @@ import com.fulcrumgenomics.sopt._
 import com.fulcrumgenomics.util.Io
 import io.cvbio.commons.CommonsDef._
 import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import io.cvbio.tools.util.RelabelReferenceNames.{DefaultDelimiter, SkipLinePrefixes, relabel}
+import io.cvbio.tools.util.RelabelReferenceNames.{DefaultDelimiter, SkipLinePrefixes}
 
-import scala.collection.mutable.ListBuffer
 import scala.util.Properties.lineSeparator
-import scala.util.{Failure, Success, Try}
 
 @clp(
   description =
     """
       |Relabel reference sequence names using defined chromosome mapping tables.
       |
-      |### References and Prior Art
+      |A collection of mapping tables is maintained at the following location:
       |
       | - https://github.com/dpryan79/ChromosomeMappings
-      | - https://github.com/TGAC/earlham-galaxytools/blob/master/tools/replace_chromosome_names/replace_chromosome_names.py
     """,
   group = ClpGroups.Util
 ) class RelabelReferenceNames(
@@ -28,7 +25,7 @@ import scala.util.{Failure, Success, Try}
   @arg(flag = 'm', doc = "A two-column tab-delimited mapping file.") val mappingFile: FilePath,
   @arg(flag = 'c', doc = "The column names to convert, 1-indexed.", minElements = 1) val columns: Seq[Int] = Seq(1),
   @arg(flag = 'd', doc = "The input file data delimiter.") val delimiter: Char = DefaultDelimiter,
-  @arg(flag = 's', doc = "Directly write-out columns that start with this prefix.") val skipPrefix: Seq[String] = SkipLinePrefixes,
+  @arg(flag = 's', doc = "Directly write-out columns that start with this prefix.") val skipPrefixes: Seq[String] = SkipLinePrefixes,
   @arg(flag = 'x', doc = "Drop records which do not have a mapping.") val drop: Boolean = true
 ) extends CvBioTool {
 
@@ -38,18 +35,24 @@ import scala.util.{Failure, Success, Try}
     val writer = Io.toWriter(out)
     val lookup = RelabelReferenceNames.buildMapping(mappingFile, delimiter = DefaultDelimiter)
 
-    source.getLines.zipWithIndex.foreach { case (line: String, lineNumber: Int) =>
-      if (skipPrefix.exists(line.startsWith)) {
+    source.getLines.zipWithIndex.foreach { case (line: String, i: Int) =>
+      if (skipPrefixes.exists(line.startsWith)) {
         writer.write(line + lineSeparator)
       } else {
-        Try(relabel(line, columns, delimiter, lookup)) match {
-          case Success(patched) => writer.write(patched.mkString(delimiter.toString) + lineSeparator)
-          case Failure(_: NoSuchElementException) if drop => {
-            logger.info(s"Dropping record ${lineNumber + 1} as at least one field did not have a mapping: $line.")
-          }
+        val fields  = line.split(delimiter)
+        val isValid = columns.map(fields).forall(lookup.keysIterator.contains)
+        if (isValid) {
+          val patched = patchManyWith(fields, at = columns, using = lookup)
+          writer.write(patched.mkString(delimiter.toString) + lineSeparator)
+        } else if (drop && !isValid) {
+          logger.info(s"A field in record ${i + 1} did not have a mapping: $line")
+        } else {
+          throw new NoSuchElementException(s"A field in record ${i + 1} did not have a mapping: $line")
         }
       }
     }
+    source.safelyClose()
+    writer.close()
   }
 }
 
