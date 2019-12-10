@@ -24,14 +24,14 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     file
   }
 
-  "UpdateDataContigNames.relabel" should "successfully relabel a valid column position" in {
+  "UpdateDataContigNames.update" should "successfully update a valid column position" in {
     val line     = Seq("chr1", "200030", "400000", "interval-name").mkString(Delimiter.toString)
     val expected = Seq("1", "200030", "400000", "interval-name").mkString(Delimiter.toString)
     val actual   = UpdateDataContigNames.update(line, Seq(0), Delimiter, Hg38UcscToEnsemblAutosomes)
     actual shouldBe expected
   }
 
-  it should "successfully relabel multiple valid column positions" in {
+  it should "successfully update multiple valid column positions" in {
     val line     = Seq("chr1", "chr2", "chr3", "chr4").mkString(Delimiter.toString)
     val expected = Seq("1", "2", "3", "chr4").mkString(Delimiter.toString)
     val actual   = UpdateDataContigNames.update(line, Seq(0, 1, 2), Delimiter, Hg38UcscToEnsemblAutosomes)
@@ -51,7 +51,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     UpdateDataContigNames.buildMapping(MappingFile, Delimiter) shouldBe Hg38UcscToEnsemblAutosomes
   }
 
-  "UpdateDataContigNames" should "relabel a text file" in {
+  "UpdateDataContigNames" should "update a text file" in {
     val original = Seq(Seq("chr1", "2", "3"), Seq("chr4", "4", "5"))
     val expected = Seq(Seq("1", "2", "3"), Seq("4", "4", "5"))
 
