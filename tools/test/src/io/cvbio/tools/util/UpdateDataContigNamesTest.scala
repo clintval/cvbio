@@ -60,13 +60,13 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
     val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter)
-    update.execute()
+    captureLogger { () => update.execute() }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
     actual should contain theSameElementsInOrderAs expected
   }
 
-  it should "raise an exception by default if a lookup function fails and drop is false" in {
+  it should "raise an exception by default if a lookup function fails and skip missing is false" in {
     val original = Seq(Seq("chr1", "2", "3"), Seq("chr4", "4", "5"), Seq("illegal", "5", "6"))
 
     val infile   = tempFile()
@@ -77,7 +77,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     a[NoSuchElementException] shouldBe thrownBy { update.execute() }
   }
 
-  it should "drop any records with items not in the mapping when drop is true" in {
+  it should "skip any records with items not in the mapping when skip missing is true" in {
     val original = Seq(Seq("chr1", "2", "3"), Seq("chr4", "4", "5"), Seq("illegal", "5", "6"))
     val expected = Seq(Seq("1", "2", "3"), Seq("4", "4", "5"))
 
@@ -92,7 +92,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     actual should contain theSameElementsInOrderAs expected
   }
 
-  it should "drop any records with items not in the mapping when skip missing is true, but not lines starting with a skip prefix" in {
+  it should "skip any records with items not in the mapping when skip missing is true, but not lines starting with a skip prefix" in {
     val original = Seq(Seq("chr1", "2", "3"), Seq("# comment"), Seq("chr4", "4", "5"), Seq("illegal", "5", "6"))
     val expected = Seq(Seq("1", "2", "3"), Seq("# comment"), Seq("4", "4", "5"))
 
@@ -118,7 +118,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
     val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, commentChars = skipPrefixes)
-    update.execute()
+    captureLogger { () => update.execute() }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
     actual should contain theSameElementsInOrderAs expected
