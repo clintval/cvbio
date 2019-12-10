@@ -150,7 +150,7 @@ Relabel the chromosomes names in a human gene annotation file.
 ❯ cvbio RelabelReferenceNames \
     -i Homo_sapiens.GRCh38.96.gtf \
     -o Homo_sapiens.GRCh38.96.ensembl-named.gtf \
-    -m ChromosomeMappings/BDGP6_UCSC2ensembl.txt \
+    -m ChromosomeMappings/GRCh38_ensembl2UCSC.txt \
     --skipPrefixes '#' \
     --columns 0 \
     --drop false
