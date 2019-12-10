@@ -47,7 +47,6 @@ import scala.util.Properties.lineSeparator
         } else if (drop && !isValid) {
           logger.info(s"A field in record ${i + 1} did not have a mapping: $line")
         } else {
-          println(fields)
           throw new NoSuchElementException(s"A field in record ${i + 1} did not have a mapping: $line")
         }
       }
