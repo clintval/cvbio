@@ -20,12 +20,12 @@ import scala.util.Properties.lineSeparator
     """,
   group = ClpGroups.Util
 ) class RelabelReferenceNames(
-  @arg(flag = 'i', doc = "The input file.") val in: FilePath = Io.StdIn,
-  @arg(flag = 'o', doc = "The output file.") val out: FilePath = Io.StdOut,
+  @arg(flag = 'i', doc = "The input file.") val in: FilePath,
+  @arg(flag = 'o', doc = "The output file.") val out: FilePath,
   @arg(flag = 'm', doc = "A two-column tab-delimited mapping file.") val mappingFile: FilePath,
   @arg(flag = 'c', doc = "The column names to convert, 1-indexed.", minElements = 1) val columns: Seq[Int] = Seq(1),
   @arg(flag = 'd', doc = "The input file data delimiter.") val delimiter: Char = DefaultDelimiter,
-  @arg(flag = 's', doc = "Directly write-out columns that start with this prefix.") val skipPrefixes: Seq[String] = SkipLinePrefixes,
+  @arg(flag = 's', doc = "Directly write-out columns that start with these prefixes.") val skipPrefixes: Seq[String] = SkipLinePrefixes,
   @arg(flag = 'x', doc = "Drop records which do not have a mapping.") val drop: Boolean = true
 ) extends CvBioTool {
 
