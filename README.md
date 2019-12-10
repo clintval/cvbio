@@ -68,8 +68,8 @@ Although paired-end reads will give the most discriminatory power for disambigua
 
 To disambiguate templates that are aligned to human (A) and mouse (B):
 
-```
-❯ java -jar cvbio.jar Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
+```console
+❯ cvbio Disambiguate -i sample.A.bam sample.B.bam -p sample/sample -n hg38 mm10
 
 ❯ tree sample/
   sample/
