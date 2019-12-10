@@ -101,7 +101,7 @@ There are three ways to initialize IGV:
 
 This tool will always attempt to connect to a running IGV application before attempting to start a new instance of IGV.
 Provide a path to an IGV JAR file if no IGV applications are currently running.
-If no IGV JAR file path is set, and there are no running instances of IGV, then this tool will attempt to fnd 'igv' on the system PATH and execute the application.
+If no IGV JAR file path is set, and there are no running instances of IGV, then this tool will attempt to fnd `igv` on the system path and execute the application.
 
 You can shutdown IGV on exit with the `--close-on-exit` option.
 This will work regardless of how this tool initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
@@ -123,9 +123,9 @@ Then go to two loci by name that are referenced in the first two name fields of 
 ❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l $(cut -f4 < targets.bed | head -n2)
 ```
 
-## RelabelReferenceNames
+## UpdateDataContigNames
 
-Relabel reference sequence names in delimited data using a chromosome name mapping table.
+Update contig names in delimited data using a name mapping table.
 
 A collection of mapping tables is maintained at the following location:
 
@@ -135,23 +135,22 @@ A collection of mapping tables is maintained at the following location:
 
 - Optionally drop rows which have chromosome names not in the mapping file
 - Replace multiple fields in a row at once using the same mapping file
-- Directly write-out rows that startwith arbitrary strings (default of `#`)
+- Directly write-out rows that start with arbitrary strings (default of `#`)
 - Parses any delimited data using any single character delimiter
 
 #### Command Line Usage
 
-Relabel the chromosomes names in a human gene annotation file.
+Relabel the contig names in an Ensembl human gene annotation file.
 
 ```console
 ❯ git clone https://github.com/dpryan79/ChromosomeMappings.git
-❯ wget -qO- ftp://ftp.ensembl.org/pub/release-96/gtf/homo_sapiens/Homo_sapiens.GRCh38.96.gtf.gz \
-    | gzip -dc > Homo_sapiens.GRCh38.96.gtf
+❯ wget ftp://ftp.ensembl.org/pub/release-96/gtf/homo_sapiens/Homo_sapiens.GRCh38.96.gtf.gz
 
-❯ cvbio RelabelReferenceNames \
-    -i Homo_sapiens.GRCh38.96.gtf \
-    -o Homo_sapiens.GRCh38.96.ucsc-named.gtf \
+❯ cvbio UpdateDataContigNames \
+    -i Homo_sapiens.GRCh38.96.gtf.gz \
+    -o Homo_sapiens.GRCh38.96.ucsc-named.gtf.gz \
     -m ChromosomeMappings/GRCh38_ensembl2UCSC.txt \
-    --skip-prefixes '#' \
+    --comment-chars '#' \
     --columns 0 \
-    --drop false
+    --skip-missing false
 ```

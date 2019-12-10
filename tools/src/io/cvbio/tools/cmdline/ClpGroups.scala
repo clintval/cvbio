@@ -5,6 +5,11 @@ import com.fulcrumgenomics.sopt.cmdline.ClpGroup
 /** The command line groups. */
 object ClpGroups {
 
+  class _Deprecated extends ClpGroup {
+    override val name: String = "Deprecated"
+    override val description: String = "These are provided for compatibility between major version upgrades."
+  }
+
   class _SamOrBam extends ClpGroup {
     override val name: String = "SAM/BAM"
     override val description: String = "Tools for manipulating SAM, BAM, and related data."
@@ -15,6 +20,7 @@ object ClpGroups {
     override val description: String = "Utility programs."
   }
 
-  final val SamOrBam = classOf[_SamOrBam]
-  final val Util     = classOf[_Util]
+  final val Deprecated = classOf[_Deprecated]
+  final val SamOrBam   = classOf[_SamOrBam]
+  final val Util       = classOf[_Util]
 }
