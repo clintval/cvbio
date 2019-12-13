@@ -30,6 +30,9 @@ object CommonsDef extends FgBioCommonsDef {
   /** The short version of the FASTQ file extension. */
   val FqExtension: FilenameSuffix = fq.getExtension
 
+  /** The extension of CSV files. */
+  val CsvExtension: FilenameSuffix = ".csv"
+
   /** The extension of JAR files. */
   val JarExtension: FilenameSuffix = ".jar"
 
