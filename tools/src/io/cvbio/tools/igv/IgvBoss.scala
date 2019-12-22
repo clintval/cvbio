@@ -32,7 +32,7 @@ import scala.collection.mutable.ListBuffer
       |is set, and there are no running instances of IGV, then IgvBoss will attempt to fnd a locally installed version
       |of IGV and run it. If you are executing IgvBoss on a MacOS system, then IgvBoss will first look for an installed
       |IGV Mac application. If one cannot be found, or you're on a different operating system, then IgvBoss will search
-      |for and `igv`executable on the system path to execute.
+      |for and `igv` executable on the system path to execute.
       |
       |## IGV Shutdown
       |
@@ -54,13 +54,13 @@ import scala.collection.mutable.ListBuffer
   // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
   // @arg(flag = 'f', doc = "The output snapshot format") val format: OutputFormat = OutputFormat.Svg,
   @arg(flag = 'j', doc = "The IGV Jar file, if we are to initialize IGV.") val jar: Option[FilePath] = None,
-  @arg(flag = 'm', doc = "The memory (in gigabytes) given to the JVM, if we are to initialize IGV.") val memory: Int = DefaultMemory,
+  @arg(flag = 'm', doc = "The heap size (Gb) given to the JVM, if we initialize.") val memory: Int = DefaultMemory,
   @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = DefaultHost,
   @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = DefaultPort,
-  @arg(flag = 'x', doc = "Close the IGV application after execution.") val closeOnExit: Boolean = false,
-  @arg(doc = "Downsample reads.") val downsample: Option[Boolean] = None,
+  @arg(doc = "Downsample reads or not.") val downsample: Option[Boolean] = None,
   @arg(doc = "Minimum base quality to shade.") val baseQualityMinimum: Option[Int] = None,
-  @arg(doc = "Maximum base quality to shade.") val baseQualityMaximum: Option[Int] = None
+  @arg(doc = "Maximum base quality to shade.") val baseQualityMaximum: Option[Int] = None,
+  @arg(flag = 'x', doc = "Close the IGV application after execution.") val closeOnExit: Boolean = false,
 ) extends CvBioTool {
 
   /** Run the tool [[IgvBoss]]. */
