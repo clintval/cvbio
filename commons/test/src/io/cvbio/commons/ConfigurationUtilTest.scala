@@ -8,7 +8,7 @@ import scala.util.Properties.isMac
 
 class ConfigurationUtilTest extends UnitSpec {
 
-  /** Whether Java is available or not? */
+  /** Whether bash is available or not? */
   lazy val bashAvailable: Boolean = new ProcessBuilder("bash", "-version").start().waitFor() == 0
 
   /** Whether Java is available or not? */
