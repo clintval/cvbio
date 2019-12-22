@@ -1,9 +1,10 @@
 package io.cvbio.tools.igv
 
 import java.io.{BufferedReader, Closeable, InputStreamReader, PrintWriter}
-import java.net.{InetAddress, Socket}
+import java.net.{InetAddress, InetSocketAddress, Socket}
 
 import com.fulcrumgenomics.FgBioDef.FgBioEnum
+import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LazyLogging}
 import enumeratum.EnumEntry
 import htsjdk.samtools.util.CloserUtil
@@ -13,6 +14,8 @@ import io.cvbio.commons.effectful.Io
 import io.cvbio.tools.igv.Igv.IgvResponse
 
 import scala.collection.immutable
+import scala.util.Properties.isMac
+import scala.concurrent.duration._
 import scala.util.Try
 
 /** A controller of a currently running IGV application instance.
@@ -120,24 +123,43 @@ object Igv extends LazyLogging {
   val DefaultPort: Int = 60151
 
   /** The time to wait before checking if IGV has booted in milliseconds. */
-  private val DefaultWaitTime: Int = 2000
+  private val DefaultWaitTime: Int = 1000
+
+  /** The time to wait before stopping all attempts of connecting to IGV. */
+  private val DefaultTimeOut: FiniteDuration  = 30 seconds
 
   /** The name of the executable. */
   val Executable: String = "igv"
 
   /** Check to see if IGV is available. */
   def available(host: String = DefaultHost, port: Int = DefaultPort): Boolean = {
-    Try { new Socket(host, port).close() }.isSuccess
+    val socket = new Socket()
+    socket.setSoTimeout(500)
+    Try {
+      socket.connect(new InetSocketAddress(host, port), 500)
+      socket.close()
+    }.isSuccess
   }
 
-  /** Initialize the IGV application from a JAR file, if not already running.*/
+  /** Initialize the IGV application from a filepath, if not already running.
+    *
+    * If the filepath is a JAR file then the JAR will be launched with <jvmMemory>.
+    * If the filepath is a MacOS application then the application will be launched accordingly.
+    * If the filepath is a path to an executable, then it will be executed.
+    */
   def apply(
-    jar: FilePath,
-    memory: Int,
-    port: Int,
-    closeOnExit: Boolean
+    path: FilePath,
+    jvmMemory: Int = DefaultMemory,
+    port: Int = DefaultPort,
+    closeOnExit: Boolean = false
   ): Igv = {
-    val command = Seq("java", s"-Xmx${memory}m", "-jar", jar.toAbsolutePath.toString)
+    val command = if (PathUtil.extensionOf(path).contains(JarExtension)) {
+      Seq("java", s"-Xmx${jvmMemory}m", "-jar", path.toAbsolutePath.toString)
+    } else if (isMac && PathUtil.extensionOf(path).contains(MacAppExtension)) {
+      Seq("open", path.toAbsolutePath.toString)
+    } else {
+      Seq(path.toString)
+    }
     initialize(command, DefaultHost, port, closeOnExit)
   }
 
@@ -149,7 +171,7 @@ object Igv extends LazyLogging {
   ): Igv = {
     ConfigurationUtil.findExecutableInPath(executable) match {
       case None       => throw new IllegalStateException(s"Could not find executable: '$executable'")
-      case Some(exec) => initialize(Seq(exec.toAbsolutePath.toString), DefaultHost, port, closeOnExit)
+      case Some(exec) => apply(exec, port = port, closeOnExit = closeOnExit)
     }
   }
 
@@ -161,16 +183,18 @@ object Igv extends LazyLogging {
       igv
     } else {
       logger.info(s"Initializing IGV with command: ${command.mkString(" ")}")
-      val process = new ProcessBuilder(command: _*).start()
-      val pipe1   = Io.pipeStream(process.getErrorStream, logger.info)
-      val pipe2   = Io.pipeStream(process.getInputStream, logger.debug)
+      val process  = new ProcessBuilder(command: _*).start()
+      val pipe1    = Io.pipeStream(process.getErrorStream, logger.info)
+      val pipe2    = Io.pipeStream(process.getInputStream, logger.debug)
+      val deadline = DefaultTimeOut fromNow
 
       do {
+        require(deadline.hasTimeLeft, s"Could not connect to IGV on $host:$port, waited $DefaultTimeOut.")
         logger.info(s"Waiting for a socket connection: $host:$port")
         Thread.sleep(DefaultWaitTime)
-      } while (process.isAlive && !available(host, port)) // TODO: Need to timeout, especially if port is incorrect.
+      } while (process.isAlive || process.exitValue == 0 && !available(host, port))
 
-      if (!process.isAlive) require(process.exitValue() == 0, "Could not initialize IGV.")
+      if (!process.isAlive) require(process.exitValue == 0, "Could not initialize IGV.")
 
       val igv = new Igv(host, port)
 

@@ -5,6 +5,7 @@ import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import io.cvbio.tools.igv.Igv.{DefaultHost, DefaultMemory, DefaultPort, Executable}
 import io.cvbio.tools.igv.IgvPreferences._
 import com.fulcrumgenomics.sopt._
+import io.cvbio.commons.ConfigurationUtil
 
 import scala.collection.mutable.ListBuffer
 
@@ -19,19 +20,25 @@ import scala.collection.mutable.ListBuffer
       |
       |## IGV Startup
       |
-      |There are three ways to initialize IGV:
+      |IGV will be initialized using the ordered logic:
       |
-      |  - Let this tool connect to an already-running IGV session
-      |  - Supply an IGV JAR file path and let this tool run it
-      |  - Let this tool find an `igv` executable on the system PATH and run it
+      |  1. Let this tool connect to an already-running IGV session
+      |  2. Supply an IGV JAR file path and let this tool run the JAR
+      |  3. If you're on MacOS and have the Mac Application installed, IgvBoss will run it
+      |  4. Finally, IgvBoss will attempt to find the `igv` executable on the system path and run it
       |
-      |This tool will always attempt to connect to a running IGV application before attempting to start a new instance
-      |of IGV. Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path
-      |is set, and there are no running instances of IGV, then this tool will attempt to fnd `igv` on the system PATH
-      |and execute the application.
+      |IgvBoss will always attempt to connect to a running IGV application before attempting to start a new instance of
+      |IGV. Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path
+      |is set, and there are no running instances of IGV, then IgvBoss will attempt to fnd a locally installed version
+      |of IGV and run it. If you are executing IgvBoss on a MacOS system, then IgvBoss will first look for an installed
+      |IGV Mac application. If one cannot be found, or you're on a different operating system, then IgvBoss will search
+      |for and `igv` executable on the system path to execute.
       |
-      |You can shutdown IGV on exit with the `--close-on-exit` option. This will work regardless of how this tool
-      |initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
+      |## IGV Shutdown
+      |
+      |You can shutdown IGV when IgvBoss exits with the `--close-on-exit` option. This will work regardless of how
+      |IgvBoss initially connected to IGV. This feature is handy for tearing down the application after your
+      |investigation is concluded.
       |
       |## References and Prior Art
       |
@@ -47,13 +54,13 @@ import scala.collection.mutable.ListBuffer
   // @arg(flag = 'o', doc = "Output path prefix to the rendered images.") val output: Option[PathPrefix] = None,
   // @arg(flag = 'f', doc = "The output snapshot format") val format: OutputFormat = OutputFormat.Svg,
   @arg(flag = 'j', doc = "The IGV Jar file, if we are to initialize IGV.") val jar: Option[FilePath] = None,
-  @arg(flag = 'm', doc = "The memory (in gigabytes) given to the JVM, if we are to initialize IGV.") val memory: Int = DefaultMemory,
+  @arg(flag = 'm', doc = "The heap size (Gb) given to the JVM, if we initialize.") val memory: Int = DefaultMemory,
   @arg(flag = 'H', doc = "The host the IGV server is running on.") val host: String = DefaultHost,
   @arg(flag = 'p', doc = "The port to the IGV server.") val port: Int = DefaultPort,
-  @arg(flag = 'x', doc = "Close the IGV application after execution.") val closeOnExit: Boolean = false,
-  @arg(doc = "Downsample reads.") val downsample: Option[Boolean] = None,
+  @arg(doc = "Downsample reads or not.") val downsample: Option[Boolean] = None,
   @arg(doc = "Minimum base quality to shade.") val baseQualityMinimum: Option[Int] = None,
-  @arg(doc = "Maximum base quality to shade.") val baseQualityMaximum: Option[Int] = None
+  @arg(doc = "Maximum base quality to shade.") val baseQualityMaximum: Option[Int] = None,
+  @arg(flag = 'x', doc = "Close the IGV application after execution.") val closeOnExit: Boolean = false,
 ) extends CvBioTool {
 
   /** Run the tool [[IgvBoss]]. */
@@ -77,7 +84,12 @@ import scala.collection.mutable.ListBuffer
     if (Igv.available(host, port)) { new Igv(host, port) } else {
       jar match {
         case Some(_jar) => Igv(_jar, memory, port, closeOnExit)
-        case None       => Igv(Executable, port, closeOnExit)
+        case None       => {
+          ConfigurationUtil.findMacApplication(Executable.toUpperCase) match {
+            case Some(macApp) => Igv(macApp, memory, port, closeOnExit)
+            case None         => Igv(Executable, port, closeOnExit)
+          }
+        }
       }
     }
   }
