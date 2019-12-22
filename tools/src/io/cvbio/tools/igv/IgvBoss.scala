@@ -5,6 +5,8 @@ import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import io.cvbio.tools.igv.Igv.{DefaultHost, DefaultMemory, DefaultPort, Executable}
 import io.cvbio.tools.igv.IgvPreferences._
 import com.fulcrumgenomics.sopt._
+import io.cvbio.commons.ConfigurationUtil
+import sun.misc.ObjectInputFilter.Config
 
 import scala.collection.mutable.ListBuffer
 
@@ -77,7 +79,12 @@ import scala.collection.mutable.ListBuffer
     if (Igv.available(host, port)) { new Igv(host, port) } else {
       jar match {
         case Some(_jar) => Igv(_jar, memory, port, closeOnExit)
-        case None       => Igv(Executable, port, closeOnExit)
+        case None       => {
+          ConfigurationUtil.findMacApplication(Executable.toUpperCase) match {
+            case Some(macApp) => Igv(macApp, memory, port, closeOnExit)
+            case None         => Igv(Executable, port, closeOnExit)
+          }
+        }
       }
     }
   }

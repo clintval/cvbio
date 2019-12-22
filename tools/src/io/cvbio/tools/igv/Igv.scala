@@ -4,6 +4,7 @@ import java.io.{BufferedReader, Closeable, InputStreamReader, PrintWriter}
 import java.net.{InetAddress, Socket}
 
 import com.fulcrumgenomics.FgBioDef.FgBioEnum
+import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.util.{CaptureSystemStreams, LazyLogging}
 import enumeratum.EnumEntry
 import htsjdk.samtools.util.CloserUtil
@@ -131,14 +132,25 @@ object Igv extends LazyLogging {
     Try { new Socket(host, port).close() }.isSuccess
   }
 
-  /** Initialize the IGV application from a JAR file, if not already running.*/
+  /** Initialize the IGV application from a filepath, if not already running.
+    *
+    * If the filepath is a JAR file then the JAR will be launched with <jvmMemory>.
+    * If the filepath is a MacOS application then the application will be launched accordingly.
+    * If the filepath is a path to an executable, then it will be executed.
+    */
   def apply(
     path: FilePath,
-    memory: Int,
-    port: Int,
-    closeOnExit: Boolean
+    jvmMemory: Int = DefaultMemory,
+    port: Int = DefaultPort,
+    closeOnExit: Boolean = false
   ): Igv = {
-    val command = Seq("java", s"-Xmx${memory}m", "-jar", path.toAbsolutePath.toString)
+    val command = if (PathUtil.extensionOf(path).contains(JarExtension)) {
+      Seq("java", s"-Xmx${jvmMemory}m", "-jar", path.toAbsolutePath.toString)
+    } else if (PathUtil.extensionOf(path).contains(MacAppExtension)) {
+      Seq("open", path.toAbsolutePath.toString)
+    } else {
+      Seq(path.toString)
+    }
     initialize(command, DefaultHost, port, closeOnExit)
   }
 
@@ -168,8 +180,8 @@ object Igv extends LazyLogging {
 
       do {
         logger.info(s"Waiting for a socket connection: $host:$port")
-        Thread.sleep(DefaultWaitTime)
-      } while (process.isAlive && !available(host, port)) // TODO: Need to timeout, especially if port is incorrect.
+        Thread.sleep(DefaultWaitTime)  // TODO: Need to timeout, especially if port is incorrect.
+      } while (process.isAlive || process.exitValue() == 0 && !available(host, port))
 
       if (!process.isAlive) require(process.exitValue() == 0, "Could not initialize IGV.")
 
