@@ -33,6 +33,9 @@ object CommonsDef extends FgBioCommonsDef {
   /** The extension of JAR files. */
   val JarExtension: FilenameSuffix = ".jar"
 
+  /** The extension for Mac applications. */
+  val MacAppExtension: FilenameSuffix = ".app"
+
   /** Text file extension. */
   val TextExtension: FilenameSuffix = ".txt"
 
@@ -89,6 +92,9 @@ object CommonsDef extends FgBioCommonsDef {
 
   /** Represents a path to an Illumina Sample Sheet. */
   type PathToSampleSheet = java.nio.file.Path
+
+  /** Represents a path to a Mac Application. */
+  type PathToMacApp = DirPath
 
   /** Represents a SAM tag. */
   type SamTag = String

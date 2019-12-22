@@ -1,6 +1,11 @@
 package io.cvbio.commons
 
+import com.fulcrumgenomics.commons.io.PathUtil
 import io.cvbio.testing.UnitSpec
+import io.cvbio.commons.ConfigurationUtil._
+import io.cvbio.commons.CommonsDef._
+
+import scala.util.Properties.isMac
 
 class ConfigurationUtilTest extends UnitSpec {
 
@@ -13,6 +18,11 @@ class ConfigurationUtilTest extends UnitSpec {
   "ConfigurationUtil.findExecutableInPath" should "return executable paths for common executables" in {
     if (bashAvailable) ConfigurationUtil.findExecutableInPath("bash") should not be empty
     if (javaAvailable) ConfigurationUtil.findExecutableInPath("java") should not be empty
+  }
+
+  "CommonsDef.findMacApplication" should "find the Safari internet browser" in {
+    val garageBand: PathToMacApp = MacApplicationRoot.resolve( "Safari" + MacAppExtension)
+    if (isMac) ConfigurationUtil.findMacApplication("Safari") shouldBe Some(garageBand)
   }
 
   "ConfigurationUtil.runAtShutdown" should "Schedule a thread to run a shutdown" in {

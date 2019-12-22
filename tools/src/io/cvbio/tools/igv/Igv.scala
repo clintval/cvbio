@@ -14,6 +14,7 @@ import io.cvbio.tools.igv.Igv.IgvResponse
 
 import scala.collection.immutable
 import scala.util.Try
+import scala.util.Properties.isMac
 
 /** A controller of a currently running IGV application instance.
   *
@@ -132,12 +133,12 @@ object Igv extends LazyLogging {
 
   /** Initialize the IGV application from a JAR file, if not already running.*/
   def apply(
-    jar: FilePath,
+    path: FilePath,
     memory: Int,
     port: Int,
     closeOnExit: Boolean
   ): Igv = {
-    val command = Seq("java", s"-Xmx${memory}m", "-jar", jar.toAbsolutePath.toString)
+    val command = Seq("java", s"-Xmx${memory}m", "-jar", path.toAbsolutePath.toString)
     initialize(command, DefaultHost, port, closeOnExit)
   }
 
@@ -184,6 +185,8 @@ object Igv extends LazyLogging {
       igv
     }
   }
+
+  /** Find the IGV executable */
 
   /** Trait that all enumerations of [[OutputFormat]] must extend. */
   sealed trait OutputFormat extends EnumEntry { def suffix: FilenameSuffix }
