@@ -146,7 +146,7 @@ object Igv extends LazyLogging {
   ): Igv = {
     val command = if (PathUtil.extensionOf(path).contains(JarExtension)) {
       Seq("java", s"-Xmx${jvmMemory}m", "-jar", path.toAbsolutePath.toString)
-    } else if (PathUtil.extensionOf(path).contains(MacAppExtension)) {
+    } else if (isMac && PathUtil.extensionOf(path).contains(MacAppExtension)) {
       Seq("open", path.toAbsolutePath.toString)
     } else {
       Seq(path.toString)
