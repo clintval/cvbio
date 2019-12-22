@@ -20,19 +20,25 @@ import scala.collection.mutable.ListBuffer
       |
       |## IGV Startup
       |
-      |There are three ways to initialize IGV:
+      |IGV will be initialized using the ordered logic:
       |
-      |  - Let this tool connect to an already-running IGV session
-      |  - Supply an IGV JAR file path and let this tool run it
-      |  - Let this tool find an `igv` executable on the system PATH and run it
+      |  1. Let this tool connect to an already-running IGV session
+      |  2. Supply an IGV JAR file path and let this tool run the JAR
+      |  3. If you're on MacOS and have the Mac Application installed, IgvBoss will run it
+      |  4. Finally, IgvBoss will attempt to find the `igv` executable on the system path and run it
       |
-      |This tool will always attempt to connect to a running IGV application before attempting to start a new instance
-      |of IGV. Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path
-      |is set, and there are no running instances of IGV, then this tool will attempt to fnd `igv` on the system PATH
-      |and execute the application.
+      |IgvBoss will always attempt to connect to a running IGV application before attempting to start a new instance of
+      |IGV. Provide a path to an IGV JAR file if no IGV applications are currently running. If no IGV JAR file path
+      |is set, and there are no running instances of IGV, then IgvBoss will attempt to fnd a locally installed version
+      |of IGV and run it. If you are executing IgvBoss on a MacOS system, then IgvBoss will first look for an installed
+      |IGV Mac application. If one cannot be found, or you're on a different operating system, then IgvBoss will search
+      |for and `igv`executable on the system path to execute.
       |
-      |You can shutdown IGV on exit with the `--close-on-exit` option. This will work regardless of how this tool
-      |initially connected to IGV and is handy for tearing down the application after your investigation is concluded.
+      |## IGV Shutdown
+      |
+      |You can shutdown IGV when IgvBoss exits with the `--close-on-exit` option. This will work regardless of how
+      |IgvBoss initially connected to IGV. This feature is handy for tearing down the application after your
+      |investigation is concluded.
       |
       |## References and Prior Art
       |
