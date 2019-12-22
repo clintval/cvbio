@@ -104,7 +104,7 @@ IgvBoss will always attempt to connect to a running IGV application before attem
 Provide a path to an IGV JAR file if no IGV applications are currently running.
 If no IGV JAR file path is set, and there are no running instances of IGV, then IgvBoss will attempt to fnd a locally installed version of IGV and run it.
 If you are executing IgvBoss on a MacOS system, then IgvBoss will first look for an installed IGV Mac application.
-If one cannot be found, or you're on a different operating system, then IgvBoss will search for and 'igv' executable on the system path to execute.
+If one cannot be found, or you're on a different operating system, then IgvBoss will search for an `igv` executable on the system path to execute.
 
 #### IGV Shutdown
 
