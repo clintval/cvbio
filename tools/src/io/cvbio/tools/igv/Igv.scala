@@ -162,7 +162,7 @@ object Igv extends LazyLogging {
   ): Igv = {
     ConfigurationUtil.findExecutableInPath(executable) match {
       case None       => throw new IllegalStateException(s"Could not find executable: '$executable'")
-      case Some(exec) => initialize(Seq(exec.toAbsolutePath.toString), DefaultHost, port, closeOnExit)
+      case Some(exec) => apply(exec, DefaultMemory, port, closeOnExit)
     }
   }
 
