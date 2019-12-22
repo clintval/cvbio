@@ -1,12 +1,11 @@
 package io.cvbio.commons
 
 import java.io.File
-import java.nio.file.{FileVisitOption, Files, Path, Paths}
+import java.nio.file.{Files, Path}
 
 import com.fulcrumgenomics.commons.io.PathUtil
 import com.fulcrumgenomics.commons.io.PathUtil.{basename, extensionOf, pathTo}
 import io.cvbio.commons.CommonsDef._
-import com.fulcrumgenomics.commons.io.PathUtil.pathTo
 
 import scala.util.Properties.isMac
 

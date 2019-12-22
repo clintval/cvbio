@@ -6,7 +6,6 @@ import io.cvbio.tools.igv.Igv.{DefaultHost, DefaultMemory, DefaultPort, Executab
 import io.cvbio.tools.igv.IgvPreferences._
 import com.fulcrumgenomics.sopt._
 import io.cvbio.commons.ConfigurationUtil
-import sun.misc.ObjectInputFilter.Config
 
 import scala.collection.mutable.ListBuffer
 

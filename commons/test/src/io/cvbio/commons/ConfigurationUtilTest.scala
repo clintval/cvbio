@@ -1,9 +1,8 @@
 package io.cvbio.commons
 
-import com.fulcrumgenomics.commons.io.PathUtil
-import io.cvbio.testing.UnitSpec
-import io.cvbio.commons.ConfigurationUtil._
 import io.cvbio.commons.CommonsDef._
+import io.cvbio.commons.ConfigurationUtil._
+import io.cvbio.testing.UnitSpec
 
 import scala.util.Properties.isMac
 

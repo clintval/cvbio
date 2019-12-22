@@ -14,8 +14,8 @@ import io.cvbio.commons.effectful.Io
 import io.cvbio.tools.igv.Igv.IgvResponse
 
 import scala.collection.immutable
-import scala.util.Try
 import scala.util.Properties.isMac
+import scala.util.Try
 
 /** A controller of a currently running IGV application instance.
   *
