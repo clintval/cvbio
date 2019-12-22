@@ -20,8 +20,8 @@ class ConfigurationUtilTest extends UnitSpec {
   }
 
   "CommonsDef.findMacApplication" should "find the Safari internet browser" in {
-    val garageBand: PathToMacApp = MacApplicationRoot.resolve( "Safari" + MacAppExtension)
-    if (isMac) ConfigurationUtil.findMacApplication("Safari") shouldBe Some(garageBand)
+    val safari: PathToMacApp = MacApplicationRoot.resolve( "Safari" + MacAppExtension)
+    if (isMac) ConfigurationUtil.findMacApplication("Safari") shouldBe Some(safari)
   }
 
   "ConfigurationUtil.runAtShutdown" should "Schedule a thread to run a shutdown" in {
