@@ -1,7 +1,7 @@
 package io.cvbio.tools.igv
 
 import java.io.{BufferedReader, Closeable, InputStreamReader, PrintWriter}
-import java.net.{InetAddress, Socket}
+import java.net.{InetAddress, InetSocketAddress, Socket}
 
 import com.fulcrumgenomics.FgBioDef.FgBioEnum
 import com.fulcrumgenomics.commons.io.PathUtil
@@ -129,7 +129,12 @@ object Igv extends LazyLogging {
 
   /** Check to see if IGV is available. */
   def available(host: String = DefaultHost, port: Int = DefaultPort): Boolean = {
-    Try { new Socket(host, port).close() }.isSuccess
+    val socket = new Socket()
+    socket.setSoTimeout(500)
+    Try {
+      socket.connect(new InetSocketAddress(host, port), 500)
+      socket.close()
+    }.isSuccess
   }
 
   /** Initialize the IGV application from a filepath, if not already running.
