@@ -198,8 +198,6 @@ object Igv extends LazyLogging {
     }
   }
 
-  /** Find the IGV executable */
-
   /** Trait that all enumerations of [[OutputFormat]] must extend. */
   sealed trait OutputFormat extends EnumEntry { def suffix: FilenameSuffix }
 
