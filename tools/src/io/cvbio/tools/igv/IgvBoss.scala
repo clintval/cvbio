@@ -32,7 +32,7 @@ import scala.collection.mutable.ListBuffer
       |is set, and there are no running instances of IGV, then IgvBoss will attempt to fnd a locally installed version
       |of IGV and run it. If you are executing IgvBoss on a MacOS system, then IgvBoss will first look for an installed
       |IGV Mac application. If one cannot be found, or you're on a different operating system, then IgvBoss will search
-      |for and `igv` executable on the system path to execute.
+      |for an `igv` executable on the system path to execute.
       |
       |## IGV Shutdown
       |
