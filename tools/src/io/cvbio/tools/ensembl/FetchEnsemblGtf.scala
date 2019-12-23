@@ -5,7 +5,7 @@ import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 
 import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.fulcrumgenomics.commons.io.Io
+import com.fulcrumgenomics.util.Io
 import com.fulcrumgenomics.sopt._
 import org.apache.http.client.utils.URIBuilder
 import sun.net.www.protocol.ftp.FtpURLConnection
@@ -19,10 +19,10 @@ import scala.util.{Failure, Success, Try}
     """,
   group  = ClpGroups.Util
 ) class FetchEnsemblGtf(
+  @arg(flag = 'o', doc = "The output file path.") val output: Path,
   @arg(flag = 'r', doc = "The Ensembl release.") val release: Int = 96,
   @arg(flag = 'b', doc = "The genome build.") val build: Int = 38,
-  @arg(flag = 's', doc = "The species.") val species: String = "Homo sapiens",
-  @arg(flag = 'o', doc = "The output file path.") val out: Path = Io.StdOut
+  @arg(flag = 's', doc = "The species.") val species: String = "Homo sapiens"
 ) extends CvBioTool {
 
   private val ConnectionTimeout = 5000
@@ -30,8 +30,8 @@ import scala.util.{Failure, Success, Try}
   private val ReadTimeout       = 5000
 
   override def execute(): Unit = {
-    Io.assertCanWriteFile(out)
-    val writer = Io.toWriter(out)
+    Io.assertCanWriteFile(output)
+    val writer = Io.toWriter(output)
 
     val speciesFmt = species.replaceAll("\\s+", "_").toLowerCase
     val filename   = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
