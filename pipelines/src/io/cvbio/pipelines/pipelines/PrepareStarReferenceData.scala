@@ -50,6 +50,6 @@ import dagr.core.tasksystem.Pipeline
     Io.assertReadable(fasta :+ gtf)
     Io.mkdirs(out)
 
-    root ==> new StarGenerateGenome(fasta = fasta, gtf = gtf, outputDir = out, overhang = overhang)
+    root ==> new StarGenerateGenome(fasta = fasta, gtf = gtf, outputDir = out, overhang = overhang, threads = threads)
   }
 }
