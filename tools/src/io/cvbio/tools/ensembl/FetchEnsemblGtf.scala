@@ -1,14 +1,15 @@
 package io.cvbio.tools.ensembl
 
 import java.io.{BufferedReader, InputStreamReader}
+import java.net.URI
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 
-import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
-import com.fulcrumgenomics.util.Io
 import com.fulcrumgenomics.sopt._
-import org.apache.http.client.utils.URIBuilder
+import com.fulcrumgenomics.util.Io
+import io.cvbio.tools.cmdline.{ClpGroups, CvBioTool}
 import sun.net.www.protocol.ftp.FtpURLConnection
+import io.cvbio.tools.ensembl.EnsemblDef._
 
 import scala.util.{Failure, Success, Try}
 
@@ -36,14 +37,7 @@ import scala.util.{Failure, Success, Try}
     val speciesFmt = species.replaceAll("\\s+", "_").toLowerCase
     val filename   = s"${speciesFmt.capitalize}.GRCh$build.$release.gtf.gz"
     val filepath   = s"/pub/release-$release/gtf/$speciesFmt/$filename"
-
-    val url = new URIBuilder()
-      .setScheme("ftp")
-      .setHost(EnsemblDef.FtpHost)
-      .setPath(filepath)
-      .build
-      .toURL
-
+    val url        = new URI(FtpScheme, FtpHost, filepath, null).toURL
     val connection = new FtpURLConnection(url)
 
     connection.setConnectTimeout(ConnectionTimeout)
