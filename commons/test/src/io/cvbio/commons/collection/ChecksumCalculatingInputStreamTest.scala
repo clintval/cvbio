@@ -40,26 +40,43 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec with TableDrivenProper
     }
   }
 
+  it should "compute a checksum when the stream is closed" in {
+    val string = "test"
+    val stream = new Md5CalculatingInputStream(new ByteArrayInputStream(string.getBytes(Charsets.US_ASCII)))
+    stream.hash shouldBe None
+    string.map(_ => stream.read) // Read exactly the number of bytes in the stream and no more!
+    stream.hash shouldBe None
+    stream.close()               // Signal the stream is finished by closing it.
+    stream.hash.value shouldBe "098f6bcd4621d373cade4e832627b4f6"
+  }
+
   it should "successfully read a single byte" in {
     val string = "test"
     val stream = new Md5CalculatingInputStream(new ByteArrayInputStream(string.getBytes(Charsets.US_ASCII)))
-    stream.read shouldBe string.head.toByte.toInt
+    stream.hash shouldBe None
+    string.map(_ => stream.read) shouldBe string.map(_.toByte.toInt)
+    stream.close()
+    stream.hash.value shouldBe "098f6bcd4621d373cade4e832627b4f6"
   }
 
   it should "successfully read and store an array of bytes" in {
     val string = "test"
     val stream = new Md5CalculatingInputStream(new ByteArrayInputStream(string.getBytes(Charsets.US_ASCII)))
-    val array  = new Array[Byte](2)
-    stream.read(array) shouldBe 2
-    array shouldBe string.take(2).map(_.toByte.toInt).toArray
+    val array  = new Array[Byte](4)
+    stream.read(array) shouldBe 4
+    stream.hash shouldBe None
+    stream.read(array) shouldBe -1
+    array shouldBe string.map(_.toByte.toInt).toArray
+    stream.hash.value shouldBe "098f6bcd4621d373cade4e832627b4f6"
   }
 
   it should "successfully read and store an array of bytes with a fixed offset" in {
     val string = "test"
     val stream = new Md5CalculatingInputStream(new ByteArrayInputStream(string.getBytes(Charsets.US_ASCII)))
-    val array  = new Array[Byte](2)
-    stream.read(array, 1, 1) shouldBe 1
-    array shouldBe Seq(0, string(0).toByte.toInt).toArray
+    val array  = new Array[Byte](1)
+    stream.read(array, 0, 1) shouldBe 1
+    array shouldBe string.map(_.toByte.toInt).take(1)
+    stream.hash shouldBe None
   }
 
   it should "raise exceptions when using unsupported features" in {

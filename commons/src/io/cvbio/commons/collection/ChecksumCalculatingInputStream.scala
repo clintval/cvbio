@@ -57,6 +57,12 @@ abstract class ChecksumCalculatingInputStream(
     Some(result.reverse.padTo(length, Zero).reverse)
   }
 
+  /** Close the stream. */
+  override def close(): Unit = {
+    this.endOfStream = true
+    inputStream.close()
+  }
+
   /** This input stream does not support marking. */
   override def markSupported: Boolean = false
 
