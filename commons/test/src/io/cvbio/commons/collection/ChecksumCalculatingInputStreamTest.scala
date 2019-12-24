@@ -6,11 +6,10 @@ import com.fulcrumgenomics.commons.io.Io
 import htsjdk.samtools.util.{Md5CalculatingInputStream => HtsJdkMd5CalculatingInputStream}
 import io.cvbio.testing.UnitSpec
 import org.apache.commons.io.Charsets
-import org.scalatest.prop.TableDrivenPropertyChecks
 
 import scala.io.Source
 
-class ChecksumCalculatingInputStreamTest extends UnitSpec with TableDrivenPropertyChecks {
+class ChecksumCalculatingInputStreamTest extends UnitSpec {
 
   "Md5CalculatingInputStream" should "behave the same as htsjdk.samtools.util.Md5CalculatingInputStream" in {
 
