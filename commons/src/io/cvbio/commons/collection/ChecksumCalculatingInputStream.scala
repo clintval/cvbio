@@ -4,7 +4,7 @@ import java.io.InputStream
 import java.math.BigInteger
 import java.security.MessageDigest
 
-import io.cvbio.commons.collection.ChecksumCalculatingInputStream.Zero
+import io.cvbio.commons.collection.ChecksumCalculatingInputStream.{SentinelEmptyValue, Zero}
 
 /** Calculate a checksum as a side-effect of consuming an input stream.
   *
@@ -33,21 +33,21 @@ abstract class ChecksumCalculatingInputStream(
   /** Reads the next byte of data from the input stream. The result is returned as an [[Int]] in the range 0 to 255. */
   override def read: Int = {
     val result = inputStream.read.ensuring(_.isValidByte)
-    if (result == -1) endOfStream = true else messageDigest.update(result.toByte)
+    if (result == SentinelEmptyValue) endOfStream = true else messageDigest.update(result.toByte)
     result
   }
 
   /** Reads some number of bytes from the input stream and stores them into the buffer array <b>. */
   override def read(b: Array[Byte]): Int = {
     val result = inputStream.read(b).ensuring(_.isValidByte)
-    if (result == -1) endOfStream = true else messageDigest.update(b, 0, result)
+    if (result == SentinelEmptyValue) endOfStream = true else messageDigest.update(b, 0, result)
     result
   }
 
   /** Reads up to <len> bytes of data from the input stream into an array of bytes. */
   override def read(b: Array[Byte], off: Int, len: Int): Int = {
     val result = inputStream.read(b, off, len).ensuring(_.isValidByte)
-    if (result == -1) endOfStream = true else messageDigest.update(b, off, result)
+    if (result == SentinelEmptyValue) endOfStream = true else messageDigest.update(b, off, result)
     result
   }
 
@@ -85,8 +85,11 @@ abstract class ChecksumCalculatingInputStream(
 /** Companion object to [[ChecksumCalculatingInputStream]]. */
 object ChecksumCalculatingInputStream {
 
-  /** The string for zero. */
+  /** The zero character. */
   private[collection] val Zero: Char = '0'
+
+  /** The sentinel value that the Java platform will use to signal the end of a stream. */
+  val SentinelEmptyValue: Int = -1
 }
 
 /** An MD5 checksum calculating input stream */
