@@ -3,7 +3,7 @@ package io.cvbio.commons.collection
 import java.io.ByteArrayInputStream
 
 import com.fulcrumgenomics.commons.io.Io
-import htsjdk.samtools.util.{Md5CalculatingInputStream => HtsStream}
+import htsjdk.samtools.util.{Md5CalculatingInputStream => HtsJdkMd5CalculatingInputStream}
 import io.cvbio.testing.UnitSpec
 import org.apache.commons.io.Charsets
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -22,7 +22,7 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec with TableDrivenProper
     ).foreach { case (string: String, expected: String) =>
       val inputBytes  = string.getBytes(Charsets.US_ASCII)
       val cvbioStream = new Md5CalculatingInputStream(new ByteArrayInputStream(inputBytes))
-      val otherStream = new HtsStream(new ByteArrayInputStream(inputBytes), Io.DevNull.toFile)
+      val otherStream = new HtsJdkMd5CalculatingInputStream(new ByteArrayInputStream(inputBytes), Io.DevNull.toFile)
 
       cvbioStream.hash shouldBe None
 
