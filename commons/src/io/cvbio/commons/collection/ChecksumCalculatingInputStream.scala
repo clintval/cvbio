@@ -14,7 +14,9 @@ import io.cvbio.commons.collection.ChecksumCalculatingInputStream.Zero
   *   - `"SHA-1"`
   *   - `"SHA256"`
   *
-  * @param algorithm the checksum algorithm.
+  * @param inputStream the underlying input stream
+  * @param algorithm the checksum algorithm
+  * @param length the expected length of the checksum string, for md5 the length is 32
   */
 abstract class ChecksumCalculatingInputStream(
   private val inputStream: InputStream,
