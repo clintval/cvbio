@@ -22,7 +22,7 @@ abstract class ChecksumCalculatingInputStream(
   private val inputStream: InputStream,
   private val algorithm: String,
   private val length: Int
-)  extends InputStream {
+) extends InputStream {
 
   /** If the underlying stream is finished. */
   private var endOfStream: Boolean = false
@@ -85,12 +85,12 @@ object ChecksumCalculatingInputStream {
 
 /** An MD5 checksum calculating input stream */
 class Md5CalculatingInputStream(private val inputStream: InputStream)
-  extends ChecksumCalculatingInputStream(inputStream = inputStream, algorithm = "MD5", length = 32)
+  extends ChecksumCalculatingInputStream(inputStream, algorithm = "MD5", length = 32)
 
 /** A SHA-1 checksum calculating input stream */
 class Sha1CalculatingInputStream(private val inputStream: InputStream)
-  extends ChecksumCalculatingInputStream(inputStream = inputStream, algorithm = "SHA-1", length = 40)
+  extends ChecksumCalculatingInputStream(inputStream, algorithm = "SHA-1", length = 40)
 
 /** A SHA-256 checksum calculating input stream */
 class Sha256CalculatingInputStream(private val inputStream: InputStream)
-  extends ChecksumCalculatingInputStream(inputStream = inputStream, algorithm = "SHA-256", length = 64)
+  extends ChecksumCalculatingInputStream(inputStream, algorithm = "SHA-256", length = 64)
