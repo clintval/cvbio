@@ -6,7 +6,6 @@ import coursier.maven.MavenRepository
 import mill._
 import mill.api.Loose
 import mill.define.{Input, Target}
-import mill.modules.Assembly.Rule.ExcludePattern
 import mill.scalalib._
 import mill.scalalib.publish.{License, PomSettings, _}
 
@@ -61,7 +60,6 @@ trait ReleaseModule extends PublishModule {
   /** The JAR manifest. */
   override def manifest = T { super.manifest().add(ImplementationVersion.toString -> implementationVersion()) }
 
-
   /** The publish version. Currently set to the implementation version. */
   override def publishVersion: T[String] = implementationVersion
 
@@ -103,8 +101,8 @@ trait ScalaTest extends TestModule {
   override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
 
   /** Run a single test with `scalatest`. */
-  def testOne(args: String*) = T.command {
-    super.runMain("org.scalatest.run", args: _*)
+  def testOne(args: String*): mill.define.Command[Unit] = T.command {
+    super.runMain(mainClass = "org.scalatest.run", args: _*)
   }
 }
 
@@ -117,18 +115,10 @@ object commons extends CommonModule {
   /** Scala compiler options. */
   override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation", "-feature")
 
-  /** Exclude these resource paths when building subsequent JARs with the commons project. */
-  override def assemblyRules: Seq[ExcludePattern] = Seq(
-    ExcludePattern(".*\\.git.*"),
-    ExcludePattern(".*chromosome-mappings/README.md")
-  )
-
   /** Ivy dependencies. */
   override def ivyDeps = Agg(
-    // ivy"eu.timepit::refined::0.9.9",
     ivy"com.fulcrumgenomics::commons::$fgbioCommonsVersion",
     ivy"com.fulcrumgenomics::fgbio::$fgbioVersion".excludeOrg(organizations=excludeOrg: _*),
-    // ivy"org.reflections:reflections:0.9.11",
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
 
@@ -165,11 +155,6 @@ object tools extends CommonModule {
 
   /** The artifact name. */
   override def artifactName: T[String] = "tools"
-
-  /** Ivy dependencies. */
-  override def ivyDeps: Target[Loose.Agg[Dep]] = super.ivyDeps() ++ Agg(
-    ivy"org.apache.httpcomponents:httpclient:4.5.8"
-  )
 
   /** Module dependencies. */
   override def moduleDeps: Seq[commons.type] = Seq(commons)
