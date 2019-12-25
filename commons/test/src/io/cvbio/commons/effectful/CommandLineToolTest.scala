@@ -1,7 +1,9 @@
 package io.cvbio.commons.effectful
 
+import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.io.PathUtil
 import io.cvbio.commons.ConfigurationUtil
+import io.cvbio.commons.effectful.CommandLineTool.ToolException
 import io.cvbio.testing.UnitSpec
 
 import scala.util.{Failure, Success, Try}
@@ -67,7 +69,36 @@ class CommandLineToolTest extends UnitSpec {
 
   it should "fail if the script resource does not exist" in {
     captureLogger { () =>
-      an[IllegalArgumentException] shouldBe thrownBy { Python.execIfAvailable(scriptResource = "scriptResourceThatDoesNotExist.R", Seq.empty) }
+      if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
+        an[IllegalArgumentException] shouldBe thrownBy {
+          Python.execIfAvailable(scriptResource = "scriptResourceThatDoesNotExist.py", Seq.empty)
+        }
+      }
+    }
+  }
+
+  it should "execute the script at a given path if the executable is available" in {
+    val path = CommandLineTool.writeResourceToTempFile(resource = "CommandLineToolTest.py")
+    captureLogger { () =>
+      if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
+        noException shouldBe thrownBy { Python.execIfAvailable(path, Seq.empty) }
+      }
+    }
+  }
+
+  it should "return the exit code of the failed script" in {
+    captureLogger { () =>
+      if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
+        val attempt = Try(Python.exec(scriptResource = "CommandLineToolFailureTest.py", Seq.empty))
+        attempt should be a 'failure
+        attempt.failure.exception match {
+          case ToolException(exe, status) => {
+            exe    shouldBe "python"
+            status shouldBe 1
+          }
+          case _                               => unreachable("Only a [[ToolException]] should have been raised.")
+        }
+      }
     }
   }
 
@@ -76,6 +107,24 @@ class CommandLineToolTest extends UnitSpec {
       if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
         Python.moduleAvailable("os") shouldBe true
         Python.moduleAvailable(Seq("os", "sys")) shouldBe true
+      }
+    }
+  }
+
+  it should "test that R packages are available unless Rscript is not" in {
+    captureLogger { () =>
+      val attempt = Try(Rscript.moduleAvailable("Matrix"))
+      if (ConfigurationUtil.findExecutableInPath(Rscript.executable).isEmpty) {
+        attempt should be a 'failure
+        attempt.failure.exception match {
+          case ToolException(exe, status) => {
+            exe    shouldBe "Rscript"
+            status shouldBe 1
+          }
+          case _                          => unreachable("Only a [[ToolException]] should have been raised.")
+        }
+      } else {
+        attempt should be a 'success
       }
     }
   }

@@ -6,6 +6,7 @@ import java.nio.file.Path
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.io.{AsyncStreamSink, PathUtil}
 import com.fulcrumgenomics.commons.util.{LazyLogging, Logger}
+import io.cvbio.commons.effectful.CommandLineTool.ToolException
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
@@ -18,11 +19,6 @@ trait CommandLineTool extends LazyLogging {
 
   /** The arguments to use for testing a correct installation of an executable. */
   val testArgs: Seq[String]
-
-  /** Exception class that holds onto the exit/status code of the executable. */
-  case class ToolException(status: Int) extends RuntimeException {
-    override def getMessage: String = s"$executable failed with exit code $status."
-  }
 
   /** Returns true if the executable is available and false otherwise. */
   lazy val available: Boolean = CommandLineTool.execCommand(executable +: testArgs, Some(logger)).isSuccess
@@ -84,7 +80,7 @@ trait ScriptRunner {
     pipe1.close()
     pipe2.close()
 
-    if (retval != 0) throw ToolException(retval)
+    if (retval != 0) throw ToolException(executable, retval)
   }
 }
 
@@ -126,6 +122,11 @@ trait Modular {
 
 /** Companion object for [[CommandLineTool]]. */
 object CommandLineTool {
+
+  /** Exception class that holds onto the exit/status code of the executable. */
+  case class ToolException(executable: String, status: Int) extends RuntimeException {
+    override def getMessage: String = s"$executable failed with exit code $status."
+  }
 
   /** Executes a command and returns the stdout.
     *
