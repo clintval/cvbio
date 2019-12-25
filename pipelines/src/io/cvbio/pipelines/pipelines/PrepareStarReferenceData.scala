@@ -1,13 +1,13 @@
 package io.cvbio.pipelines.pipelines
 
-import io.cvbio.commons.CommonsDef.{DirPath, PathToFasta, PathToGtf}
-import io.cvbio.pipelines.cmdline.ClpGroups
-import io.cvbio.pipelines.tasks.star.StarGenerateGenome
-import io.cvbio.pipelines.tasks.star.StarGenerateGenome.DefaultCores
 import com.fulcrumgenomics.commons.io.Io
 import com.fulcrumgenomics.sopt.{arg, clp}
 import dagr.core.execsystem.Cores
 import dagr.core.tasksystem.Pipeline
+import io.cvbio.commons.CommonsDef.{DirPath, PathToFasta, PathToGtf}
+import io.cvbio.pipelines.cmdline.ClpGroups
+import io.cvbio.pipelines.tasks.star.StarGenerateGenome
+import io.cvbio.pipelines.tasks.star.StarGenerateGenome.DefaultCores
 
 @clp(
   description =
