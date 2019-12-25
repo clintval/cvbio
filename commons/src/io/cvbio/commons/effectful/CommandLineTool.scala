@@ -113,7 +113,10 @@ trait Modular {
   def testModuleCommand(module: String): Seq[String]
 
   /** Returns true if the tested module exist with the tested executable. */
-  def moduleAvailable(module: String): Boolean = CommandLineTool.execCommand(testModuleCommand(module), Some(logger)).isSuccess
+  def moduleAvailable(module: String): Boolean = {
+    if (self.available) CommandLineTool.execCommand(testModuleCommand(module), Some(logger)).isSuccess
+    else false
+  }
 
   /** Returns true if all tested modules exist with the tested executable.
     *
