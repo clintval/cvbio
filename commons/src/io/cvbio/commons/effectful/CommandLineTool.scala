@@ -71,14 +71,14 @@ trait ScriptRunner {
 
   /** Executes a script from the filesystem Path.
     *
-    * @param script Path to the script to be executed
+    * @param path Path to the script to be executed
     * @param args a variable list of arguments to pass to the script
     * @throws ToolException when the exit code from the called process is not zero
     */
-  def exec(script: Path, args: Seq[String]): Unit = {
-    val basename = PathUtil.basename(script, trimExt = false)
+  def exec(path: Path, args: Seq[String]): Unit = {
+    val basename = PathUtil.basename(path, trimExt = false)
     logger.info(s"Executing $basename with $executable using the arguments: ${args.mkString(" ")}")
-    val command = executable +: script.toAbsolutePath.toString +: args
+    val command = executable +: path.toAbsolutePath.toString +: args
     val process = new ProcessBuilder(command: _*).redirectErrorStream(false).start()
     val pipe1   = Io.pipeStream(process.getErrorStream, logger.warning)
     val pipe2   = Io.pipeStream(process.getInputStream, logger.info)
