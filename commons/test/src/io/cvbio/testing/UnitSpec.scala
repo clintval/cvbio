@@ -4,10 +4,10 @@ import java.nio.file.Path
 
 import io.cvbio.commons.effectful.Io
 import com.fulcrumgenomics.commons.util.CaptureSystemStreams
-import org.scalatest.{FlatSpec, Matchers, OptionValues}
+import org.scalatest.{FlatSpec, Matchers, OptionValues, TryValues}
 
 /** Base class for unit testing. */
-trait UnitSpec extends FlatSpec with Matchers with OptionValues with CaptureSystemStreams {
+trait UnitSpec extends FlatSpec with Matchers with OptionValues with TryValues with CaptureSystemStreams {
 
   /** Make an arbitrary temporary file with the following permissions. */
   def tempFile(readable: Boolean = true, writable: Boolean = true, executable: Boolean = true): Path = {
