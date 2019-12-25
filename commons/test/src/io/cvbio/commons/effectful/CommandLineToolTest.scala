@@ -90,6 +90,17 @@ class CommandLineToolTest extends UnitSpec {
     }
   }
 
+  it should "fail if the script path does not exist" in {
+    captureLogger { () =>
+      if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
+        a[ToolException] shouldBe thrownBy {
+          val path = PathUtil.pathTo("nowhere.py")
+          Python.execIfAvailable(path = path, Seq.empty)
+        }
+      }
+    }
+  }
+
   it should "return the exit code of the failed script" in {
     captureLogger { () =>
       if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
