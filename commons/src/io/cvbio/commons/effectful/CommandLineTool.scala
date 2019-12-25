@@ -52,7 +52,14 @@ trait ScriptRunner {
     * @param args a list of arguments to pass to the script
     * @throws Exception when the script at the path with the given arguments cannot be executed successfully
     */
-  def execIfAvailable(path: Path, args: Seq[String]): Unit = execIfAvailable(path.toString, args)
+  def execIfAvailable(path: Path, args: Seq[String]): Unit = {
+    if (available) Try(exec(path, args)) match {
+      case Success(_)            => Unit
+      case Failure(e: Throwable) =>
+        logger.error( s"Cannot execute script $path with args: ${args.mkString(" ")}")
+        throw e
+    }
+  }
 
   /** Executes a script from the classpath, raise an exception otherwise.
     *

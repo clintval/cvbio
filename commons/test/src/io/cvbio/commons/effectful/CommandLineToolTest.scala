@@ -18,6 +18,10 @@ class CommandLineToolTest extends UnitSpec {
     }
   }
 
+  "CommandLineTool.ToolException" should "wrap the executable name and exit code in the exception message" in {
+    ToolException("EXECUTABLE", 2).getMessage shouldBe "EXECUTABLE failed with exit code 2."
+  }
+
   "CommandLineTool.writeResourceToTempFile" should "write a resource to a temporary file" in {
     val tempFile = CommandLineTool.writeResourceToTempFile(resource = "CommandLineToolTest.R")
     tempFile.toFile.deleteOnExit()
