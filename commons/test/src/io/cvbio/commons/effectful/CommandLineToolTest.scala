@@ -57,7 +57,7 @@ class CommandLineToolTest extends UnitSpec {
         }
         Try(Rscript.execIfAvailable(scriptResource = "CommandLineToolFailureTest.R", Seq.empty)) match {
           case Success(_)            => Rscript.moduleAvailable(module = "thisPackageDoesNotExist") shouldBe false
-          case Failure(e: Throwable) => e.getMessage should include("Rscript failed with exit code 1.")
+          case Failure(e: Throwable) => e.getMessage should include ("Rscript failed with exit code 1.")
         }
       }
     }
