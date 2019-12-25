@@ -5,10 +5,10 @@ import java.util.jar.JarFile
 
 import com.fulcrumgenomics.commons.io.PathUtil
 import io.cvbio.commons.CommonsDef._
+
 import scala.collection.JavaConverters._
 
-import scala.io.Source
-
+/** Helper methods for reflective code. */
 object ReflectionUtil {
 
   /** The scheme component of the URI for files. */
@@ -30,16 +30,5 @@ object ReflectionUtil {
       }
       case loc => throw new IllegalStateException(s"Unknown resource object: $loc")
     }
-  }
-
-  /** Stream a resource object to lines. */
-  def getResourceAsLines(path: Filename): Iterator[String] = {
-    val stream = getClass.getResourceAsStream(path)
-    Source.fromInputStream(stream).withClose(() => stream.close()).getLines
-  }
-
-  /** Given a path prefix to a file, and a filename, stream the resource object to lines. */
-  def getResourceAsLines(prefix: FilenamePrefix, filename: Filename): Iterator[String] = {
-    getResourceAsLines(prefix + "/" + filename)
   }
 }
