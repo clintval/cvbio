@@ -92,7 +92,7 @@ object ChecksumCalculatingInputStream {
   val SentinelEmptyValue: Int = -1
 
   /** Implicits for wrapping input streams for on-the-fly checksum calculation. */
-  implicit class WithInputStreamUtil(private val inputStream: InputStream) {
+  implicit class WithInputStreamUtil[T <: InputStream](private val inputStream: T) {
 
     /** Implicitly wrap the input stream in a MD5 calculating input stream. */
     def md5Calculating: Md5CalculatingInputStream = new Md5CalculatingInputStream(inputStream)
