@@ -128,18 +128,10 @@ class CommandLineToolTest extends UnitSpec {
 
   it should "test that R packages are available unless Rscript is not" in {
     captureLogger { () =>
-      val attempt = Try(Rscript.moduleAvailable("Matrix"))
       if (ConfigurationUtil.findExecutableInPath(Rscript.executable).isEmpty) {
-        attempt should be a 'failure
-        attempt.failure.exception match {
-          case ToolException(exe, status) => {
-            exe    shouldBe "Rscript"
-            status shouldBe 1
-          }
-          case _ => unreachable("Only a [[ToolException]] should have been raised.")
-        }
+        Rscript.moduleAvailable("Matrix") shouldBe false
       } else {
-        attempt should be a 'success
+        Rscript.moduleAvailable("Matrix") shouldBe true
       }
     }
   }
