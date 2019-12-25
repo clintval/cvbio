@@ -16,11 +16,13 @@ object Conda extends CommandLineTool with Versioned with Modular {
   /** Returns true if the tested module exist with the tested executable. */
   override def moduleAvailable(module: String): Boolean = {
     import io.cvbio.commons.environ.Conda.PackageInfoJsonProtocol._
-    CommandLineTool.execCommand(testModuleCommand(module), Some(logger)) match {
-      case Success(value) => value.mkString("").parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
-      case Failure(_: CommandLineTool.ToolException) => false
-      case Failure(e: Throwable) => throw e
-    }
+    if (Conda.available) {
+      CommandLineTool.execCommand(testModuleCommand(module), Some(logger)) match {
+        case Success(value) => value.mkString("").parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
+        case Failure(_: CommandLineTool.ToolException) => false
+        case Failure(e: Throwable) => throw e
+      }
+    } else { false }
   }
 
   /** A data class representing the information of a conda package. */
