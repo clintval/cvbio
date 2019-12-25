@@ -96,7 +96,7 @@ class CommandLineToolTest extends UnitSpec {
             exe    shouldBe "python"
             status shouldBe 1
           }
-          case _                               => unreachable("Only a [[ToolException]] should have been raised.")
+          case _ => unreachable("Only a [[ToolException]] should have been raised.")
         }
       }
     }
@@ -121,7 +121,7 @@ class CommandLineToolTest extends UnitSpec {
             exe    shouldBe "Rscript"
             status shouldBe 1
           }
-          case _                          => unreachable("Only a [[ToolException]] should have been raised.")
+          case _ => unreachable("Only a [[ToolException]] should have been raised.")
         }
       } else {
         attempt should be a 'success
