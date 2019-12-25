@@ -113,7 +113,9 @@ trait Modular {
   def testModuleCommand(module: String): Seq[String]
 
   /** Returns true if the tested module exist with the tested executable. */
-  def moduleAvailable(module: String): Boolean = CommandLineTool.execCommand(testModuleCommand(module), Some(logger)).isSuccess
+  def moduleAvailable(module: String): Boolean = {
+    self.available && CommandLineTool.execCommand(testModuleCommand(module), Some(logger)).isSuccess
+  }
 
   /** Returns true if all tested modules exist with the tested executable.
     *
@@ -138,8 +140,9 @@ object CommandLineTool {
   /** Executes a command and returns the stdout.
     *
     * @param command the command to be executed
+    * @param logger an optional logger to use for emitting a status update on initial execution
     */
-  private[effectful] def execCommand(command: Seq[String], logger: Option[Logger] = None): Try[ListBuffer[String]] = {
+  def execCommand(command: Seq[String], logger: Option[Logger] = None): Try[ListBuffer[String]] = {
     logger.foreach(_.info(s"Executing: ${command.mkString(" ")}"))
     Try {
       val process  = new ProcessBuilder(command: _*).redirectErrorStream(true).start()
