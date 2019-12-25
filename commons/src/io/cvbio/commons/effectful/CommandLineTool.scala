@@ -6,6 +6,7 @@ import java.nio.file.Path
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.io.{AsyncStreamSink, PathUtil}
 import com.fulcrumgenomics.commons.util.{LazyLogging, Logger}
+import io.cvbio.commons.effectful.CommandLineTool.ToolException
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
@@ -18,11 +19,6 @@ trait CommandLineTool extends LazyLogging {
 
   /** The arguments to use for testing a correct installation of an executable. */
   val testArgs: Seq[String]
-
-  /** Exception class that holds onto the exit/status code of the executable. */
-  case class ToolException(status: Int) extends RuntimeException {
-    override def getMessage: String = s"$executable failed with exit code $status."
-  }
 
   /** Returns true if the executable is available and false otherwise. */
   lazy val available: Boolean = CommandLineTool.execCommand(executable +: testArgs, Some(logger)).isSuccess
@@ -56,7 +52,14 @@ trait ScriptRunner {
     * @param args a list of arguments to pass to the script
     * @throws Exception when the script at the path with the given arguments cannot be executed successfully
     */
-  def execIfAvailable(path: Path, args: Seq[String]): Unit = execIfAvailable(path.toString, args)
+  def execIfAvailable(path: Path, args: Seq[String]): Unit = {
+    if (available) Try(exec(path, args)) match {
+      case Success(_)            => Unit
+      case Failure(e: Throwable) =>
+        logger.error( s"Cannot execute script $path with args: ${args.mkString(" ")}")
+        throw e
+    }
+  }
 
   /** Executes a script from the classpath, raise an exception otherwise.
     *
@@ -68,14 +71,14 @@ trait ScriptRunner {
 
   /** Executes a script from the filesystem Path.
     *
-    * @param script Path to the script to be executed
+    * @param path Path to the script to be executed
     * @param args a variable list of arguments to pass to the script
     * @throws ToolException when the exit code from the called process is not zero
     */
-  def exec(script: Path, args: Seq[String]): Unit = {
-    val basename = PathUtil.basename(script, trimExt = false)
+  def exec(path: Path, args: Seq[String]): Unit = {
+    val basename = PathUtil.basename(path, trimExt = false)
     logger.info(s"Executing $basename with $executable using the arguments: ${args.mkString(" ")}")
-    val command = executable +: script.toAbsolutePath.toString +: args
+    val command = executable +: path.toAbsolutePath.toString +: args
     val process = new ProcessBuilder(command: _*).redirectErrorStream(false).start()
     val pipe1   = Io.pipeStream(process.getErrorStream, logger.warning)
     val pipe2   = Io.pipeStream(process.getInputStream, logger.info)
@@ -84,7 +87,7 @@ trait ScriptRunner {
     pipe1.close()
     pipe2.close()
 
-    if (retval != 0) throw ToolException(retval)
+    if (retval != 0) throw ToolException(executable, retval)
   }
 }
 
@@ -126,6 +129,11 @@ trait Modular {
 
 /** Companion object for [[CommandLineTool]]. */
 object CommandLineTool {
+
+  /** Exception class that holds onto the exit/status code of the executable. */
+  case class ToolException(executable: String, status: Int) extends RuntimeException {
+    override def getMessage: String = s"$executable failed with exit code $status."
+  }
 
   /** Executes a command and returns the stdout.
     *
