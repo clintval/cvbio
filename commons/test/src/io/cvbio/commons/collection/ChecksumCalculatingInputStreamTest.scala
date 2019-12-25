@@ -122,4 +122,28 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec {
       stream.hash.value.length shouldBe 64
     }
   }
+
+  "WithInputStreamUtil" should "wrap the input streams in checksum calculating input streams" in {
+    import io.cvbio.commons.collection.ChecksumCalculatingInputStream.WithInputStreamUtil
+
+    val input = "Vf3ppC4Iu74AAAAAaHR0cDovL2hhc2hjYXQubmV0LwA"
+
+    val md5Hash    = "cdfed259056f77f3ffed384466a8bbdf"
+    val sha1Hash   = "3af2f9159cb82aa55fa4bb8488cb0767a0630bbb"
+    val sha256Hash = "50e07769c8763d8939a8dc55bc59799bb46c314193b4eee4ee0776d7cf5f08e4"
+
+    def stream = new ByteArrayInputStream(input.getBytes(Charsets.US_ASCII))
+
+    val md5Calculating = stream.md5Calculating
+    Source.fromInputStream(md5Calculating).toList.mkString("") shouldBe input
+    md5Calculating.hash.value shouldBe md5Hash
+
+    val sha1Calculating = stream.sha1Calculating
+    Source.fromInputStream(sha1Calculating).toList.mkString("") shouldBe input
+    sha1Calculating.hash.value shouldBe sha1Hash
+
+    val sha256Calculating = stream.sha256Calculating
+    Source.fromInputStream(sha256Calculating).toList.mkString("") shouldBe input
+    sha256Calculating.hash.value shouldBe sha256Hash
+  }
 }
