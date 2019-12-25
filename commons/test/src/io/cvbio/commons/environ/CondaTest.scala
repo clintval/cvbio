@@ -1,5 +1,7 @@
 package io.cvbio.commons.environ
 
+import java.io.IOException
+
 import io.cvbio.commons.effectful.CommandLineTool.ToolException
 import io.cvbio.commons.environ.Conda.PackageInfo
 import io.cvbio.testing.UnitSpec
@@ -13,9 +15,10 @@ class CondaTest extends UnitSpec {
     captureLogger { () =>
       Conda.version match {
         case Success(version) => version.mkString("") should include("conda")
-        case Failure(e: ToolException) if Conda.available => throw new IllegalStateException("Builtins should be installed.")
-        case Failure(e: ToolException) => Unit
-        case Failure(e: Throwable)     => throw e
+        case Failure(_: ToolException) if Conda.available  => throw new IllegalStateException("Builtins should be installed.")
+        case Failure(_: IOException)   if Conda.available  => throw new IllegalStateException("If conda is available, it should execute.")
+        case Failure(_: Throwable)     if !Conda.available => Unit
+        case Failure(e: Throwable) => throw e
       }
     }
   }
