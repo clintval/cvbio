@@ -45,23 +45,13 @@ class CommandLineToolTest extends UnitSpec {
   "CommandLineTool.Rscript" should "test if ggplot2 is available" in {
     captureLogger { () =>
       if (ConfigurationUtil.findExecutableInPath(Rscript.executable).nonEmpty) {
-        noException shouldBe thrownBy {
-          Try(Rscript.execIfAvailable(scriptResource = "CommandLineTool.R", Seq.empty)) match {
-            case Success(_)            => Rscript.ggplot2Available shouldBe true
-            case Failure(e: Throwable) => {
-              e.getMessage should include ("Cannot execute script")
-              throw e
-            }
-          }
+        Try(Rscript.execIfAvailable(scriptResource = "CommandLineToolTest.R", Seq.empty)) match {
+          case Success(_)            => Rscript.ggplot2Available shouldBe true
+          case Failure(e: Throwable) => e.getMessage should include ("Cannot execute script")
         }
-        noException shouldBe thrownBy {
-          Try(Rscript.execIfAvailable(scriptResource = "CommandLineToolFailure.R", Seq.empty)) match {
-            case Success(_)            => Rscript.moduleAvailable(module = "thisPackageDoesNotExist") shouldBe false
-            case Failure(e: Throwable) => {
-              e.getMessage should include("Cannot execute script")
-              throw e
-            }
-          }
+        Try(Rscript.execIfAvailable(scriptResource = "CommandLineToolFailureTest.R", Seq.empty)) match {
+          case Success(_)            => Rscript.moduleAvailable(module = "thisPackageDoesNotExist") shouldBe false
+          case Failure(e: Throwable) => e.getMessage should include("Rscript failed with exit code 1.")
         }
       }
     }
@@ -73,6 +63,12 @@ class CommandLineToolTest extends UnitSpec {
 
     val pyLogs = captureLogger { () => Python.execIfAvailable(scriptResource = "CommandLineToolTest.py", Seq.empty) }
     if (Python.available) pyLogs should include ("Executing CommandLineToolTest.py")
+  }
+
+  it should "fail if the script resource does not exist" in {
+    captureLogger { () =>
+      an[IllegalArgumentException] shouldBe thrownBy { Python.execIfAvailable(scriptResource = "scriptResourceThatDoesNotExist.R", Seq.empty) }
+    }
   }
 
   "Modular" should "test that generic builtins are available in Python" in {

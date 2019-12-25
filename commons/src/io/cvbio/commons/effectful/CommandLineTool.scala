@@ -45,7 +45,8 @@ trait ScriptRunner {
     if (available) Try(exec(scriptResource, args)) match {
       case Success(_)            => Unit
       case Failure(e: Throwable) =>
-        logger.error(e, s"Cannot execute script from $scriptResource with args: ${args.mkString(" ")}")
+        logger.error( s"Cannot execute script from $scriptResource with args: ${args.mkString(" ")}")
+        throw e
     }
   }
 
