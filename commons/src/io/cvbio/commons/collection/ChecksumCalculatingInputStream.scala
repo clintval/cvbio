@@ -90,6 +90,19 @@ object ChecksumCalculatingInputStream {
 
   /** The sentinel value that the Java platform will use to signal the end of a stream. */
   val SentinelEmptyValue: Int = -1
+
+  /** Implicits for wrapping input streams for on-the-fly checksum calculation. */
+  implicit class WithInputStreamUtil(private val inputStream: InputStream) {
+
+    /** Implicitly wrap the input stream in a MD5 calculating input stream. */
+    def md5Calculating: Md5CalculatingInputStream = new Md5CalculatingInputStream(inputStream)
+
+    /** Implicitly wrap the input stream in a SHA-1 calculating input stream. */
+    def sha1Calculating: Sha1CalculatingInputStream = new Sha1CalculatingInputStream(inputStream)
+
+    /** Implicitly wrap the input stream in a SHA-256 calculating input stream. */
+    def sha256Calculating: Sha256CalculatingInputStream = new Sha256CalculatingInputStream(inputStream)
+  }
 }
 
 /** An MD5 checksum calculating input stream */
