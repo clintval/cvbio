@@ -1,6 +1,5 @@
 import java.util.jar.Attributes.Name.{IMPLEMENTATION_VERSION => ImplementationVersion}
 
-import mill.contrib.scoverage.ScoverageModule
 import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill._
@@ -8,6 +7,8 @@ import mill.api.Loose
 import mill.define.{Input, Target}
 import mill.scalalib._
 import mill.scalalib.publish.{License, PomSettings, _}
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
+import mill.contrib.scoverage.ScoverageModule
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,8 +18,27 @@ private val fgbioVersion        = "1.1.0-2100905-SNAPSHOT"
 
 private val excludeOrg = Seq("com.google.cloud.genomics", "gov.nih.nlm.ncbi", "org.apache.ant",  "org.testng")
 
+
+/** The ScalaTest settings. */
+trait ScalaTest extends TestModule {
+
+  /** Ivy dependencies. */
+  override def ivyDeps = Agg(
+    ivy"org.scalatest::scalatest::3.0.7".excludeOrg(organizations="org.junit"),
+    ivy"org.scalamock::scalamock::4.4.0"
+  )
+
+  /** Test frameworks. */
+  override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
+
+  /** Run a single test with `scalatest`. */
+  def testOne(args: String*): mill.define.Command[Unit] = T.command {
+    super.runMain(mainClass = "org.scalatest.run", args: _*)
+  }
+}
+
 /** A base trait for versioning modules. */
-trait ReleaseModule extends PublishModule {
+trait ReleaseModule extends ScalaModule {
 
   /** Execute Git arguments and return the standard output. */
   private def git(args: String*): String = %%("git", args)(pwd).out.string.trim
@@ -45,7 +65,7 @@ trait ReleaseModule extends PublishModule {
   private def dirty: Boolean = git("status", "--porcelain").nonEmpty
 
   /** The implementation version. */
-  private def implementationVersion: Input[String] = T.input {
+  def implementationVersion: Input[String] = T.input {
     val prefix: String = (currentTag, lastTag) match {
       case (Success(_currentTag), _)       => _currentTag
       case (Failure(_), Success(_lastTag)) => _lastTag + "-" + shortHash
@@ -61,15 +81,15 @@ trait ReleaseModule extends PublishModule {
   override def manifest = T { super.manifest().add(ImplementationVersion.toString -> implementationVersion()) }
 
   /** The publish version. Currently set to the implementation version. */
-  override def publishVersion: T[String] = implementationVersion
+  def publishVersion: T[String] = implementationVersion
 
   /** POM Settings. */
-  override def pomSettings: T[PomSettings] = PomSettings(
+  def pomSettings: T[PomSettings] = PomSettings(
     description    = "Artisanal bioinformatics tools and pipelines in Scala",
     organization   = "io.cvbio",
     url            = "https://github.com/clintval/cvbio",
     licenses       = Seq(License.MIT),
-    versionControl = VersionControl.github("clintval", "cvbio"),
+    versionControl = VersionControl.github(owner = "clintval", repo = "cvbio"),
     developers     = Seq(Developer("clintval", "Clint Valentine", "https://github.com/clintval"))
   )
 }
@@ -77,7 +97,7 @@ trait ReleaseModule extends PublishModule {
 /** The common module mixin for all of our projects. */
 trait CommonModule extends ScalaModule with ReleaseModule with ScoverageModule {
   def scalaVersion     = "2.12.2"
-  def scoverageVersion = "1.3.1"
+  def scoverageVersion = "1.4.0"
 
   override def repositories: Seq[coursier.Repository] = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/public"),
@@ -90,19 +110,13 @@ trait CommonModule extends ScalaModule with ReleaseModule with ScoverageModule {
     mkdir(pwd / 'jars)
     cp.over(assembly.path, pwd / 'jars / jarName)
   }
-}
 
-/** The ScalaTest settings. */
-trait ScalaTest extends TestModule {
-  override def ivyDeps = Agg(
-    ivy"org.scalatest::scalatest::3.0.7".excludeOrg(organizations="org.junit"),
-    ivy"org.scalamock::scalamock::4.4.0"
-  )
-  override def testFrameworks: Target[Seq[String]] = Seq("org.scalatest.tools.Framework")
+  def testModulesDeps: Seq[TestModule] = Nil
 
-  /** Run a single test with `scalatest`. */
-  def testOne(args: String*): mill.define.Command[Unit] = T.command {
-    super.runMain(mainClass = "org.scalatest.run", args: _*)
+  object test extends Tests with ScalaTest with ScoverageTests {
+    override def moduleDeps: Seq[JavaModule]        = super.moduleDeps ++ testModulesDeps
+    override def ivyDeps: Target[Loose.Agg[Dep]]    = super.ivyDeps()
+    override def runIvyDeps: Target[Loose.Agg[Dep]] = super.runIvyDeps()
   }
 }
 
@@ -113,7 +127,7 @@ object commons extends CommonModule {
   override def artifactName: T[String] = "commons"
 
   /** Scala compiler options. */
-  override def scalacOptions: Target[Seq[String]] = Seq("-target:jvm-1.8", "-deprecation", "-feature")
+  override def scalacOptions: Target[Seq[String]] = T { Seq("-target:jvm-1.8", "-deprecation", "-feature") }
 
   /** Ivy dependencies. */
   override def ivyDeps = Agg(
@@ -122,9 +136,6 @@ object commons extends CommonModule {
     ivy"io.spray::spray-json::1.3.4",
     ivy"org.slf4j:slf4j-nop:1.7.6"  // For logging silence: https://www.slf4j.org/codes.html#StaticLoggerBinder
   )
-
-  /** Test the commons project. */
-  object test extends Tests with ScalaTest with ScoverageTests
 }
 
 /** The pipelines project. */
@@ -140,15 +151,11 @@ object pipelines extends CommonModule {
   )
 
   /** Module dependencies. */
-  override def moduleDeps: Seq[commons.type] = Seq(commons)
+  override def moduleDeps      = Seq(commons, commons.scoverage)
+  override def testModulesDeps = Seq(commons.test)
 
   /** Build a JAR file from the pipelines project. */
   def localJar = T { super.localJar(assembly(), jarName = "cvbio-pipelines.jar") }
-
-  /** Test the pipelines project. */
-  object test extends Tests with ScalaTest with ScoverageTests {
-    override def moduleDeps: Seq[JavaModule] =  super.moduleDeps ++ Seq(commons.test)
-  }
 }
 
 /** The tools project. */
@@ -158,13 +165,9 @@ object tools extends CommonModule {
   override def artifactName: T[String] = "tools"
 
   /** Module dependencies. */
-  override def moduleDeps: Seq[commons.type] = Seq(commons)
+  override def moduleDeps      = Seq(commons, commons.scoverage)
+  override def testModulesDeps = Seq(commons.test)
 
   /** Build a JAR file from the tools project. */
   def localJar = T { super.localJar(assembly(), jarName = "cvbio.jar") }
-
-  /** Test the tools project. */
-  object test extends Tests with ScalaTest with ScoverageTests {
-    override def moduleDeps: Seq[JavaModule] =  super.moduleDeps ++ Seq(commons.test)
-  }
 }
