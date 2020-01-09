@@ -6,7 +6,7 @@ import java.nio.file.Path
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.io.{AsyncStreamSink, PathUtil}
 import com.fulcrumgenomics.commons.util.{LazyLogging, Logger}
-import io.cvbio.commons.effectful.CommandLineTool.ToolException
+import io.cvbio.commons.effectful.CommandLineTool.{ProcessOutput, ToolException}
 
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success, Try}
@@ -102,7 +102,7 @@ trait Versioned {
   val testArgs: Seq[String] = Seq(versionFlag)
 
   /** Returns the version string of this executable. */
-  lazy val version: Try[ListBuffer[String]] = CommandLineTool.execCommand(executable +: testArgs, Some(logger))
+  lazy val version: Try[ProcessOutput] = CommandLineTool.execCommand(executable +: testArgs, Some(logger))
 }
 
 /** A mixin for executables that have packages or modules. */
@@ -137,21 +137,28 @@ object CommandLineTool {
     override def getMessage: String = s"$executable failed with exit code $status."
   }
 
+  case class ProcessOutput(stdout: ListBuffer[String] = ListBuffer(), stderr: ListBuffer[String] = ListBuffer())
+
   /** Executes a command and returns the stdout.
     *
     * @param command the command to be executed
     * @param logger an optional logger to use for emitting a status update on initial execution
     */
-  def execCommand(command: Seq[String], logger: Option[Logger] = None): Try[ListBuffer[String]] = {
+  def execCommand(command: Seq[String], logger: Option[Logger] = None): Try[ProcessOutput] = {
     logger.foreach(_.info(s"Executing: ${command.mkString(" ")}"))
     Try {
-      val process  = new ProcessBuilder(command: _*).redirectErrorStream(true).start()
-      val stdout   = ListBuffer[String]()
-      val sink     = new AsyncStreamSink(process.getInputStream, s => stdout.append(s))
-      val exitCode = process.waitFor()
+      val process    = new ProcessBuilder(command: _*).redirectErrorStream(true).start()
+      val outputs    = ProcessOutput()
+      val stdoutSink = new AsyncStreamSink(process.getInputStream, s => outputs.stdout.append(s))
+      val stdErrSink = new AsyncStreamSink(process.getErrorStream, s => outputs.stderr.append(s))
+      val exitCode   = process.waitFor()
 
       require(exitCode == 0, s"Command did not execute successfully. Exit code: $exitCode")
-      yieldAndThen(stdout)(sink.safelyClose())
+
+      yieldAndThen(outputs) {
+        stdoutSink.safelyClose()
+        stdErrSink.safelyClose()
+      }
     }
   }
 
