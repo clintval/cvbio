@@ -6,7 +6,7 @@ import com.fulcrumgenomics.commons.util.CaptureSystemStreams
 import io.cvbio.commons.effectful.Io
 import io.cvbio.testing.UnitSpec
 
-class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
+class UpdateContigNamesTest extends UnitSpec with CaptureSystemStreams {
 
   /** Default delimiter for tests. */
   val Delimiter: Char = '\t'
@@ -24,34 +24,34 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     file
   }
 
-  "UpdateDataContigNames.update" should "successfully update a valid column position" in {
+  "UpdateContigNames.update" should "successfully update a valid column position" in {
     val line     = Seq("chr1", "200030", "400000", "interval-name").mkString(Delimiter.toString)
     val expected = Seq("1", "200030", "400000", "interval-name").mkString(Delimiter.toString)
-    val actual   = UpdateDataContigNames.update(line, Seq(0), Delimiter, Hg38UcscToEnsemblAutosomes)
+    val actual   = UpdateContigNames.update(line, Seq(0), Delimiter, Hg38UcscToEnsemblAutosomes)
     actual shouldBe expected
   }
 
   it should "successfully update multiple valid column positions" in {
     val line     = Seq("chr1", "chr2", "chr3", "chr4").mkString(Delimiter.toString)
     val expected = Seq("1", "2", "3", "chr4").mkString(Delimiter.toString)
-    val actual   = UpdateDataContigNames.update(line, Seq(0, 1, 2), Delimiter, Hg38UcscToEnsemblAutosomes)
+    val actual   = UpdateContigNames.update(line, Seq(0, 1, 2), Delimiter, Hg38UcscToEnsemblAutosomes)
     actual shouldBe expected
   }
 
   it should "raise an exception by default if a lookup function fails" in {
     val line = Seq("chr29", "200030", "400000", "interval-name").mkString(Delimiter.toString)
-    an[NoSuchElementException] shouldBe thrownBy { UpdateDataContigNames.update(line, Seq(0), Delimiter, Hg38UcscToEnsemblAutosomes) }
+    an[NoSuchElementException] shouldBe thrownBy { UpdateContigNames.update(line, Seq(0), Delimiter, Hg38UcscToEnsemblAutosomes) }
   }
 
-  "UpdateDataContigNames.buildMapping" should "read a mapping from an iterator of lines" in {
-    UpdateDataContigNames.buildMapping(MappingLines.iterator, Delimiter) shouldBe Hg38UcscToEnsemblAutosomes
+  "UpdateContigNames.buildMapping" should "read a mapping from an iterator of lines" in {
+    UpdateContigNames.buildMapping(MappingLines.iterator, Delimiter) shouldBe Hg38UcscToEnsemblAutosomes
   }
 
   it should "read a mapping from two-column delimited file" in {
-    UpdateDataContigNames.buildMapping(MappingFile, Delimiter) shouldBe Hg38UcscToEnsemblAutosomes
+    UpdateContigNames.buildMapping(MappingFile, Delimiter) shouldBe Hg38UcscToEnsemblAutosomes
   }
 
-  "UpdateDataContigNames" should "update a text file" in {
+  "UpdateContigNames" should "update a text file" in {
     val original = Seq(Seq("chr1", "2", "3"), Seq("chr4", "4", "5"))
     val expected = Seq(Seq("1", "2", "3"), Seq("4", "4", "5"))
 
@@ -59,7 +59,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     val outfile  = tempFile()
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
-    val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter)
+    val update = new UpdateContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter)
     captureLogger { () => update.execute() }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
@@ -73,7 +73,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     val outfile  = tempFile()
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
-    val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = false)
+    val update = new UpdateContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = false)
     a[NoSuchElementException] shouldBe thrownBy { update.execute() }
   }
 
@@ -85,7 +85,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     val outfile  = tempFile()
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
-    val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = true)
+    val update = new UpdateContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = true)
     noException shouldBe thrownBy { captureLogger { () => update.execute() } }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
@@ -100,7 +100,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     val outfile  = tempFile()
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
-    val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = true)
+    val update = new UpdateContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, skipMissing = true)
     noException shouldBe thrownBy { captureLogger { () => update.execute() } }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
@@ -117,7 +117,7 @@ class UpdateDataContigNamesTest extends UnitSpec with CaptureSystemStreams {
     val outfile  = tempFile()
     Io.writeLines(infile, original.map(_.mkString(Delimiter.toString)))
 
-    val update = new UpdateDataContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, commentChars = skipPrefixes)
+    val update = new UpdateContigNames(infile, outfile, mapping = MappingFile, columns = Seq(0), delimiter = Delimiter, commentChars = skipPrefixes)
     captureLogger { () => update.execute() }
 
     val actual = Io.readLines(outfile).map(_.split(Delimiter)).toList
