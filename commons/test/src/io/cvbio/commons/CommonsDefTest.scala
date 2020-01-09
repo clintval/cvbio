@@ -26,7 +26,7 @@ class CommonsDefTest extends UnitSpec {
 
   "CommonsDef.interleave" should "interleave an item after every other item" in {
     val coll: Seq[String] = Seq("1", "2", "3")
-    interleave(sep = "\n")(coll).mkString("") shouldBe (coll.mkString("\n") + "\n")
+    interleave(sep = "\n")(coll).mkString shouldBe (coll.mkString("\n") + "\n")
   }
 
   "CommonsDef.patchManyWith" should "patch in known items within a collection using a simple function" in {

@@ -25,8 +25,8 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec {
 
       cvbioStream.hash shouldBe None
 
-      Source.fromInputStream(cvbioStream).toList.mkString("") shouldBe string
-      Source.fromInputStream(otherStream).toList.mkString("") shouldBe string
+      Source.fromInputStream(cvbioStream).toList.mkString shouldBe string
+      Source.fromInputStream(otherStream).toList.mkString shouldBe string
 
       cvbioStream.read shouldBe -1
       otherStream.read shouldBe -1
@@ -98,7 +98,7 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec {
       val inputBytes = string.getBytes(Charsets.US_ASCII)
       val stream     = new Sha1CalculatingInputStream(new ByteArrayInputStream(inputBytes))
 
-      Source.fromInputStream(stream).toList.mkString("") shouldBe string
+      Source.fromInputStream(stream).toList.mkString shouldBe string
       stream.read shouldBe -1
       stream.hash.value shouldBe expected
       stream.hash.value.length shouldBe 40
@@ -116,7 +116,7 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec {
       val inputBytes = string.getBytes(Charsets.US_ASCII)
       val stream     = new Sha256CalculatingInputStream(new ByteArrayInputStream(inputBytes))
 
-      Source.fromInputStream(stream).toList.mkString("") shouldBe string
+      Source.fromInputStream(stream).toList.mkString shouldBe string
       stream.read shouldBe -1
       stream.hash.value shouldBe expected
       stream.hash.value.length shouldBe 64
@@ -135,15 +135,15 @@ class ChecksumCalculatingInputStreamTest extends UnitSpec {
     def stream = new ByteArrayInputStream(input.getBytes(Charsets.US_ASCII))
 
     val md5Calculating = stream.md5Calculating
-    Source.fromInputStream(md5Calculating).toList.mkString("") shouldBe input
+    Source.fromInputStream(md5Calculating).toList.mkString shouldBe input
     md5Calculating.hash.value shouldBe md5Hash
 
     val sha1Calculating = stream.sha1Calculating
-    Source.fromInputStream(sha1Calculating).toList.mkString("") shouldBe input
+    Source.fromInputStream(sha1Calculating).toList.mkString shouldBe input
     sha1Calculating.hash.value shouldBe sha1Hash
 
     val sha256Calculating = stream.sha256Calculating
-    Source.fromInputStream(sha256Calculating).toList.mkString("") shouldBe input
+    Source.fromInputStream(sha256Calculating).toList.mkString shouldBe input
     sha256Calculating.hash.value shouldBe sha256Hash
   }
 }

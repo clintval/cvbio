@@ -14,7 +14,7 @@ class CondaTest extends UnitSpec {
   "Conda.version" should "report the version when conda is installed" in {
     captureLogger { () =>
       Conda.version match {
-        case Success(version) => version.mkString("") should include("conda")
+        case Success(version) => version.mkString should include("conda")
         case Failure(_: ToolException) if Conda.available  => throw new IllegalStateException("Builtins should be installed.")
         case Failure(_: IOException)   if Conda.available  => throw new IllegalStateException("If conda is available, it should execute.")
         case Failure(_: Throwable)     if !Conda.available => Unit
