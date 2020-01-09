@@ -128,7 +128,7 @@ Then go to two loci by name that are referenced in the first two name fields of 
 ❯ cvbio IgvBoss -g mm10.fa -i infile.bam targets.bed -l $(cut -f4 < targets.bed | head -n2)
 ```
 
-## UpdateDataContigNames
+## UpdateContigNames
 
 Update contig names in delimited data using a name mapping table.
 
@@ -151,7 +151,7 @@ Relabel the contig names in an Ensembl human gene annotation file.
 ❯ git clone https://github.com/dpryan79/ChromosomeMappings.git
 ❯ wget ftp://ftp.ensembl.org/pub/release-96/gtf/homo_sapiens/Homo_sapiens.GRCh38.96.gtf.gz
 
-❯ cvbio UpdateDataContigNames \
+❯ cvbio UpdateContigNames \
     -i Homo_sapiens.GRCh38.96.gtf.gz \
     -o Homo_sapiens.GRCh38.96.ucsc-named.gtf.gz \
     -m ChromosomeMappings/GRCh38_ensembl2UCSC.txt \
