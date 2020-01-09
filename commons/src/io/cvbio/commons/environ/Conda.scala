@@ -18,7 +18,7 @@ object Conda extends CommandLineTool with Versioned with Modular {
     import io.cvbio.commons.environ.Conda.PackageInfoJsonProtocol._
     if (Conda.available) {
       CommandLineTool.execCommand(testModuleCommand(module), Some(logger)) match {
-        case Success(value) => value.mkString("").parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
+        case Success(value) => value.mkString.parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
         case Failure(_: CommandLineTool.ToolException) => false
         case Failure(e: Throwable) => throw e
       }
