@@ -159,3 +159,15 @@ Relabel the contig names in an Ensembl human gene annotation file.
     --columns 0 \
     --skip-missing false
 ```
+
+<br>
+
+---
+
+## Testimonials
+
+<br>
+
+> "When [@clintval](https://github.com/clintval) saw the breadth of his repos he wept, for there were no more tools to put into scala."
+>
+> — [@ksebby](https://github.com/ksebby)
