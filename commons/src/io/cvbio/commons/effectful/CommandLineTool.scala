@@ -6,6 +6,7 @@ import java.nio.file.Path
 import com.fulcrumgenomics.commons.CommonsDef._
 import com.fulcrumgenomics.commons.io.{AsyncStreamSink, PathUtil}
 import com.fulcrumgenomics.commons.util.{LazyLogging, Logger}
+import io.cvbio.commons.SystemUtil
 import io.cvbio.commons.effectful.CommandLineTool.ToolException
 
 import scala.collection.mutable.ListBuffer
@@ -179,7 +180,16 @@ trait Python extends CommandLineTool with Versioned with Modular with ScriptRunn
   def testModuleCommand(module: String): Seq[String] = Seq(executable, "-c", s"import $module")
 }
 
-/** A collection of values and methods specific for the Rscript executable */
+/** The system Python version. */
+object Python extends Python  { val executable: String = "python" }
+
+/** The system Python 2. */
+object Python2 extends Python { val executable: String = "python2" }
+
+/** The system Python3. */
+object Python3 extends Python { val executable: String = "python3" }
+
+/** The Rscript executable */
 object Rscript extends CommandLineTool with Versioned with Modular with ScriptRunner {
 
   /** The Rscript executable name. */
@@ -195,11 +205,40 @@ object Rscript extends CommandLineTool with Versioned with Modular with ScriptRu
   lazy val ggplot2Available: Boolean = available && moduleAvailable("ggplot2")
 }
 
-/** The system Python version. */
-object Python extends Python  { val executable: String = "python" }
+/** The Rtg Tools executable */
+object Rtg extends CommandLineTool with Versioned {
 
-/** The system Python 2. */
-object Python2 extends Python { val executable: String = "python2" }
+  /** Path to an Rtg Tools Sequence Data File. */
+  type PathToSdf = java.nio.file.Path
 
-/** The system Python3. */
-object Python3 extends Python { val executable: String = "python3" }
+  /** The Rtg Tools executable name. */
+  val executable: String = "rtg"
+
+  /** Evaluates called variants for genotype agreement with a baseline variant set irrespective of representational
+    * differences. Outputs a weighted ROC file which can be viewed with `rtg rocplot` and VCF files containing false
+    * positives (called variants not matched in the baseline), false negatives (baseline variants not matched in the
+    * call set), and true positives (variants that match between the baseline and calls).
+    */
+  def vcfEval(
+    baseline: PathToVcf,
+    calls: PathToVcf,
+    template: PathToSdf,
+    output: DirPath,
+    allRecords: Boolean = true,
+    cores: Int = SystemUtil.availableCores,
+    interval: Option[PathToIntervals] = None,
+  ): Try[ListBuffer[String]] = {
+
+    val buffer = new ListBuffer[String]()
+    buffer.append(executable, "vcfeval")
+    buffer.append("--baseline", baseline.toString)
+    buffer.append("--calls",    calls.toString)
+    buffer.append("--template", template.toString)
+    buffer.append("--output",   output.toString)
+    buffer.append("--threads",  cores.toString)
+    if (allRecords) buffer.append("--all-records")
+    interval.foreach(b => buffer.append("--bed-regions", b.toString))
+
+    CommandLineTool.execCommand(buffer, logger = Some(logger))
+  }
+}

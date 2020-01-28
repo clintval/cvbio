@@ -20,7 +20,13 @@ object ClpGroups {
     override val description: String = "Utility programs."
   }
 
+  class _VcfOrBcf extends ClpGroup {
+    override val name: String = "VCF/BCF"
+    override val description: String = "Tools for manipulating VCF, BCF, and related data."
+  }
+
   final val Deprecated = classOf[_Deprecated]
   final val SamOrBam   = classOf[_SamOrBam]
   final val Util       = classOf[_Util]
+  final val VcfOrBcf   = classOf[_VcfOrBcf]
 }
