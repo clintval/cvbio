@@ -1,8 +1,11 @@
 package io.cvbio.commons.environ
 
-import io.cvbio.commons.effectful.{CommandLineTool, Modular, Versioned}
+import htsjdk.samtools.util.Md5CalculatingInputStream
+import io.cvbio.commons.effectful.{CommandLineTool, Io, Modular, Versioned}
 import spray.json._
+import io.cvbio.commons.CommonsDef._
 
+import scala.io.Source
 import scala.util.{Failure, Success}
 
 object Conda extends CommandLineTool with Versioned with Modular {
@@ -18,7 +21,7 @@ object Conda extends CommandLineTool with Versioned with Modular {
     import io.cvbio.commons.environ.Conda.PackageInfoJsonProtocol._
     if (Conda.available) {
       CommandLineTool.execCommand(testModuleCommand(module), Some(logger)) match {
-        case Success(value) => value.mkString.parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
+        case Success(out) => out.stdout.mkString.parseJson.convertTo[Seq[PackageInfo]].exists(_.name == module)
         case Failure(_: CommandLineTool.ToolException) => false
         case Failure(e: Throwable) => throw e
       }
@@ -36,6 +39,12 @@ object Conda extends CommandLineTool with Versioned with Modular {
     platform: String,
     version: String
  )
+
+  def createEnviron(path: FilePath, name: Option[String] = None): Unit = {
+    val envName = name.getOrElse(Io.md5(path))
+    val command = Seq(executable, "create",  "--json", "--name", envName, "--file", path.toString)
+    CommandLineTool.execCommand(command)
+  }
 
   /** A (de)serialization protocol for [[PackageInfo]] classes. */
   object PackageInfoJsonProtocol extends DefaultJsonProtocol {

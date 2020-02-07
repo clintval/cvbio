@@ -32,7 +32,7 @@ class CommandLineToolTest extends UnitSpec {
   "CommandLineTool.execCommand" should "execute a command successfully and return the stdout" in {
     val attempt = CommandLineTool.execCommand(Seq("java", "-version"))
     attempt should be a 'success
-    attempt.success.value.exists(_.contains("version")) shouldBe true
+    attempt.success.value.stdout.exists(_.contains("version")) shouldBe true
   }
 
   it should "wrap the exception in a Try()" in {
@@ -140,7 +140,7 @@ class CommandLineToolTest extends UnitSpec {
     captureLogger { () =>
       if (ConfigurationUtil.findExecutableInPath(Python.executable).nonEmpty) {
         Python.version shouldBe 'success
-        Python.version.success.value.exists(_.contains("Python")) shouldBe true
+        Python.version.success.value.stdout.exists(_.contains("Python")) shouldBe true
       }
     }
   }
